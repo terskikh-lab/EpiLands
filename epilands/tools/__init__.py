@@ -18,3 +18,4 @@ from ._join_iterable import join_iterable
 from ._split_df_by_tissue import split_data_by_tissue
 from ._update_platemap import update_platemap
 from ._is_float import is_float
+from ._gpuinit import gpuinit
