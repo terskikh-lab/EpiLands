@@ -11,7 +11,7 @@ import os
 from ..read_write import save_matplotlib_figure
 from ..tools import reshape_dataframe_to_plate
 from ._plot_heatmap import plot_heatmap
-from MultiProcessTools import MultiProcessHelper
+from multiprocesstools import MultiProcessHelper
 import os
 
 sub_package_name = os.path.split(os.path.dirname(os.path.abspath(__file__)))[1]
