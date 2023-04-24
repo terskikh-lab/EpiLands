@@ -51,9 +51,9 @@ def find_all_files(
     file_paths = []
 
     search_msg = f"keyword {pattern}" if regex == False else f"regex {pattern}"
+    logger.info(f"Searching in {path} for {search_msg}")
     for dirpath, dirnames, filenames in os.walk(path):
         num_already_found = len(file_paths)
-        logger.info(f"Searching in {dirpath} for {search_msg}")
         for filename in filenames:
             if regex == False and pattern in filename:
                 logger.debug(f"found {filename} in {dirpath}")
@@ -61,7 +61,9 @@ def find_all_files(
             elif regex == True and re.search(pattern, filename):
                 logger.debug(f"found {filename} in {dirpath}")
                 file_paths.append(os.path.join(dirpath, filename))
-        logger.info(f"Found {len(file_paths)-num_already_found} files in {dirpath}")
+        logger.debug(f"Found {len(file_paths)-num_already_found} files in {dirpath}")
     if len(file_paths) == 0:
         logger.warning(f"No files found in {path}")
+    else:
+        logger.info(f"Found {len(file_paths)} files in {path}")
     return file_paths
