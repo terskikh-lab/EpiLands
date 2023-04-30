@@ -9,7 +9,6 @@ from ..math.conversions import pixel_area_to_diameter
 
 def size_threshold_df(
     df: pd.DataFrame,
-    *,
     high_threshold: float = 2.0,
     low_threshold: float = 0,
     threshold_col: str = "Ch1_MOR_Nucleus_area",
@@ -19,7 +18,7 @@ def size_threshold_df(
     display_quantile: float = 0.99,
     convert_area_to_diameter: bool = False,
     **kwargs,
-):
+) -> pd.Series:
     """
     This function takes a dataframe of single cell data and eliminates doublets based on the median of the threshold_col.
 
