@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
+from typing import Callable
 
 # from tqdm.notebook import tqdm, trange
 
@@ -17,9 +18,10 @@ logger = logging.getLogger(sub_package_name)
 def bootstrap_df(
     df: pd.DataFrame,
     group_by: list,
+    with_replacement: bool,
     metric: callable,
-    num_bootstraps: int = 100,
-    num_cells: int = 1000,
+    num_bootstraps: int,
+    num_cells: int,
     *,
     seed: int = None,
 ):
@@ -48,7 +50,10 @@ def bootstrap_df(
     # logg.info(
     #     f"Began bootstrapping {num_bootstraps} samples of {num_cells} cells from {group_by}"
     # )
-    df_groups = df.groupby(group_by, as_index=1)  # group by the groupby columns
+
+    df_groups = df.set_index(group_by, drop=True).groupby(
+        group_by
+    )  # group by the groupby columns
     bootstrap_samples = []  # create a list to store the bootstrap samples
     if seed == None:
         seed = np.random.randint(low=0, high=2**16, size=None)
@@ -73,17 +78,18 @@ def bootstrap_df(
         bootstrap_result = df_groups.apply(
             _bootstrap,  # apply the bootstrap function to each group
             num_cells=num_cells,
+            replace=with_replacement,
             metric=metric,
             seed=seed + b,
         )  # add bootstrap number to seed for initialization
-        bootstrap_result.dropna(
-            axis=0, how="all", inplace=True  # drop any rows that contain all NaN
-        )
-        if bootstrap_result.index.name in bootstrap_result.columns:
-            bootstrap_result.drop(
-                bootstrap_result.index.name, axis="columns", inplace=True
-            )
-        bootstrap_result.reset_index(inplace=True)  # reset the index
+        # bootstrap_result.dropna(
+        #     axis=0, how="all", inplace=True  # drop any rows that contain all NaN
+        # )
+        # if bootstrap_result.index.name in bootstrap_result.columns:
+        #     bootstrap_result.drop(
+        #         bootstrap_result.index.name, axis="columns", inplace=True
+        #     )
+        # bootstrap_result.reset_index(inplace=True)  # reset the index
         bootstrap_result["Bootstrap"] = int(b)  # add a column with the bootstrap number
         bootstrap_samples.append(
             bootstrap_result
@@ -91,7 +97,7 @@ def bootstrap_df(
     bootstrap_samples = pd.concat(
         bootstrap_samples
     )  # concatenate the bootstrap samples
-    bootstrap_samples.reset_index(inplace=True, drop=True)
+    # bootstrap_samples.reset_index(inplace=True, drop=False)
     # logg.info(
     #     f"SUCCESS: bootstrapped {num_bootstraps} samples of {num_cells}"
     #     + f" for {len(df_groups.groups)} groups identified in {group_by}"
@@ -99,9 +105,11 @@ def bootstrap_df(
     return bootstrap_samples, group_sizes, seed
 
 
-def _bootstrap(df_group: pd.DataFrame, num_cells: int, metric: callable, seed: int):
+def _bootstrap(
+    df: pd.DataFrame, num_cells: int, replace: bool, metric: Callable, seed: int
+):
     """
-    df_group : pandas dataframe
+    df : pandas dataframe
         dataframe containing a group of cells
     num_cells : int
         number of cells to sample per bootstrap
@@ -113,12 +121,13 @@ def _bootstrap(df_group: pd.DataFrame, num_cells: int, metric: callable, seed: i
         dataframe containing the bootstrap sample
     """
     try:
-        bootstrap_sample = df_group.sample(n=num_cells, replace=True, random_state=seed)
+        bootstrap_sample = df.sample(n=num_cells, replace=replace, random_state=seed)
         bootstrap_result = bootstrap_sample.apply(metric, axis=0)
     except ValueError as e:
-        if df_group.shape[0] < num_cells:
+        if df.shape[0] < num_cells:
             print(f"Not enough cells to bootstrap, returning NaN")
             bootstrap_result = bootstrap_sample.apply(lambda s: np.NaN, axis=0)
         else:
             raise e
+    bootstrap_result["original_count"] = int(df.shape[0])
     return bootstrap_result
