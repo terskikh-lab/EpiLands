@@ -1,6 +1,7 @@
 from . import feature_embedding
 from . import feature_model_construction
 from . import feature_preprocessing
+from . import feature_visualization
 from . import image_preprocessing
 from . import image_qc
 from . import image_segmentation

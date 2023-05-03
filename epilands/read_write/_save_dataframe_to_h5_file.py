@@ -24,13 +24,13 @@ def save_mixed_dataframe_to_h5_file(
 ):
     data_num, data_cat = split_df_by_dtype(df=dataframe)
     with h5py.File(filename, "a") as hf:
-        data_num = data_num.to_numpy(dtype="float64")
         index_num = data_num.index.to_numpy(dtype="S")
         columns_num = data_num.columns.to_numpy(dtype="S")
+        data_num = data_num.to_numpy(dtype="float64")
 
-        data_cat = data_cat.to_numpy(dtype="S")
         index_cat = data_cat.index.to_numpy(dtype="S")
         columns_cat = data_cat.columns.to_numpy(dtype="S")
+        data_cat = data_cat.to_numpy(dtype="S")
 
         hf.create_dataset("data_num", data=data_num, dtype=data_num.dtype)
         hf.create_dataset("index_num", data=index_num, dtype=index_num.dtype)
@@ -40,7 +40,5 @@ def save_mixed_dataframe_to_h5_file(
         hf.create_dataset("index_cat", data=index_cat, dtype=index_cat.dtype)
         hf.create_dataset("columns_cat", data=columns_cat, dtype=columns_cat.dtype)
         if name is not None:
-            hf.create_dataset(
-                "name", data=np.array([name]), dtype="<U{}".format(len(name))
-            )
+            hf.create_dataset("name", data=np.array([name]), dtype="S")
         hf.close()
