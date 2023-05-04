@@ -5,6 +5,7 @@ import logging
 import tifffile as tiff
 from typing import Union, Dict, AnyStr
 from concurrent.futures import ThreadPoolExecutor
+import numpy as np
 from ..image_preprocessing import calculate_2D_projection
 
 sub_package_name = os.path.split(os.path.dirname(os.path.abspath(__file__)))[1]

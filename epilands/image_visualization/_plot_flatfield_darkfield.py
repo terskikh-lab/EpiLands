@@ -5,7 +5,7 @@ from matplotlib.figure import Figure
 import numpy as np
 from typing import Tuple, Union
 
-from ..read_write import save_matplotlib_figure
+from ..generic_read_write import save_matplotlib_figure
 
 
 def plot_flatfield_darkfield(

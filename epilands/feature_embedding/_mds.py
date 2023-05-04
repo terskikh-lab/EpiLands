@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.manifold import MDS
 
 # Relative imports
-from ..read_write import save_dataframe_to_csv
+from ..generic_read_write import save_dataframe_to_csv
 
 
 def generate_mds(

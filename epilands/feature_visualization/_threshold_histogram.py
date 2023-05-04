@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # RELATIVE IMPORTS #
-from ..read_write import save_matplotlib_figure
+from ..generic_read_write import save_matplotlib_figure
 
 
 def threshold_objects_histogram(

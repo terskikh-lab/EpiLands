@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 from ..tools import aggregate_df, reshape_dataframe_to_plate
-from ..read_write import save_dataframe_to_csv
+from ..generic_read_write import save_dataframe_to_csv
 
 
 def generate_intensity_map(

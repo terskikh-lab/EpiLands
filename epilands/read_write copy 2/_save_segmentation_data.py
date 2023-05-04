@@ -6,8 +6,6 @@ from typing import Union
 from ..image_preprocessing import object_cookie_cutter
 
 
-
-
 def save_segmentation_data(
     path: str,
     filename: str,
@@ -58,7 +56,7 @@ def save_segmentation_data(
                 - "chN" [DATASET]
                     cropped channel N image of object N
 
-    """    
+    """
     # Create the file, open it and write the data to it
     with h5py.File(os.path.join(path, filename), "x") as hdf5_file:
         # Create group for details
@@ -84,6 +82,7 @@ def save_segmentation_data(
             objects_idx_group = objects_group.create_group(str(object_idx))
             for ch in data:
                 objects_idx_group.create_dataset(ch, data=data[ch][object_idx])
+
 
 # def save_segmentation_data(
 #     path: str,
@@ -126,4 +125,3 @@ def save_segmentation_data(
 #             )
 #             for object_idx, object_slice in object_slices.items():
 #                 channel_group.create_dataset(str(object_idx), data=object_slice)
-

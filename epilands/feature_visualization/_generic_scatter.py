@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # RELATIVE IMPORTS #
-from ..read_write import save_matplotlib_figure
+from ..generic_read_write import save_matplotlib_figure
 from ..tools import get_kwargs
 
 

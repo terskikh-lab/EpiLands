@@ -10,7 +10,7 @@ import pandas as pd
 # Relative imports
 # from ..get import get_feature_cols
 from ..config import NAME_SEPARATOR_
-from ..read_write import save_dataframe_to_csv
+from ..generic_read_write import save_dataframe_to_csv
 
 
 def generate_umap(

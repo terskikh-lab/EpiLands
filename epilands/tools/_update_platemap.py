@@ -1,5 +1,4 @@
 import pandas as pd
-# from ..read_write import select_filepath_tk
 
 
 def update_platemap(

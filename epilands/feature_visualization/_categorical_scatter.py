@@ -5,7 +5,7 @@ import seaborn as sns
 from typing import List, Union
 
 # relative imports
-from ..read_write import save_matplotlib_figure
+from ..generic_read_write import save_matplotlib_figure
 from ..tools import join_iterable
 
 

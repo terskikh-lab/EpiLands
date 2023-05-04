@@ -5,7 +5,7 @@ import numpy as np
 from scipy.spatial.distance import pdist, squareform
 
 # Relative imports
-from ..read_write import save_dataframe_to_csv
+from ..generic_read_write import save_dataframe_to_csv
 from .. import tools
 from numpy.typing import ArrayLike
 from beartype import beartype

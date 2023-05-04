@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Relative imports
-from ..read_write import save_dataframe_to_csv
+from ..generic_read_write import save_dataframe_to_csv
 from ..tools import join_iterable, create_group_col
 
 

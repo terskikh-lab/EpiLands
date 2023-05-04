@@ -6,7 +6,7 @@ import numpy as np
 from stardist.plot import render_label
 from typing import Tuple
 
-from ..read_write import save_matplotlib_figure
+from ..generic_read_write import save_matplotlib_figure
 
 
 def plot_segmentation_mask(

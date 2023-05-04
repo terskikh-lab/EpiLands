@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 
 # Relative imports
-from ..read_write import save_dataframe_to_csv
+from ..generic_read_write import save_dataframe_to_csv
 from .. import tools
 from numpy.typing import ArrayLike
 
