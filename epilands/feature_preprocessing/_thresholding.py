@@ -13,9 +13,6 @@ def size_threshold_df(
     low_threshold: float = 0,
     threshold_col: str = "Ch1_MOR_Nucleus_area",
     threshold_metric: str = "median",
-    units="px area",
-    show_histogram=True,
-    display_quantile: float = 0.99,
     convert_area_to_diameter: bool = False,
     **kwargs,
 ) -> pd.Series:
@@ -55,7 +52,6 @@ def size_threshold_df(
 
     data_series = df[threshold_col].astype(float)  # copy the input data and reset index
     if convert_area_to_diameter == True:
-        units = "diameter (uM)"
         data_series = data_series.map(pixel_area_to_diameter)
     if threshold_metric == "median":
         high_threshold = high_threshold * data_series.median()
@@ -85,11 +81,9 @@ def size_threshold_df(
     #         xlabel = ' '.join((threshold_col, units)),
     #         **kwargs
     #         )
-    inlier_objects = (
-        (data_series < high_threshold) & (data_series > low_threshold)
-    ).iloc[
-        :, 0
-    ]  # create a list of cells that are inside the boundaries
+    inlier_objects = (data_series < high_threshold) & (
+        data_series > low_threshold
+    )  # create a series of cells that are inside the boundaries
     print("After Thresholding:")
     print(
         data_series[inlier_objects].describe(percentiles=[0.5, 0.75, 0.9, 0.95])
