@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 from typing import Callable
+from numbers import Number
 
 # from tqdm.notebook import tqdm, trange
 
@@ -57,9 +58,9 @@ def bootstrap_df(
     bootstrap_samples = []  # create a list to store the bootstrap samples
     if seed == None:
         seed = np.random.randint(low=0, high=2**16, size=None)
-    elif not isinstance(seed, int):
+    elif not isinstance(seed, Number):
         # logg.error(f"seed {seed} is not of type int")
-        raise TypeError(f"seed {seed} is not of type int")
+        raise TypeError(f"seed {seed} is not a number")
     group_sizes = {
         str(group): data.shape[0] for group, data in df_groups
     }  # create a dictionary of group sizes for QC
