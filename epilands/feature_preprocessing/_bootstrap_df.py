@@ -124,7 +124,12 @@ def bootstrap_df(
 
 
 def _bootstrap(
-    df: pd.DataFrame, num_cells: int, replace: bool, metric: Callable, seed: int
+    df: pd.DataFrame,
+    num_cells: int,
+    replace: bool,
+    metric: Callable,
+    seed: int,
+    frac: float = None,
 ):
     """
     df : pandas dataframe
