@@ -23,7 +23,7 @@ def bootstrap_df(
     metric: callable,
     num_bootstraps: int,
     num_cells: int,
-    *,
+    frac: float = None,
     seed: int = None,
 ):
     """
@@ -55,6 +55,20 @@ def bootstrap_df(
     df_groups = df.set_index(group_by, drop=True).groupby(
         group_by
     )  # group by the groupby columns
+
+    if with_replacement == False:
+        for grp, _dat in df_groups:
+            max_bootstraps = _dat.shape[0] // num_cells
+            # num_bootstraps = num_bootstraps * 4 // 3
+            if num_bootstraps > max_bootstraps:
+                raise ValueError(
+                    f"Not enough cells for {num_bootstraps} bootstraps to be in training set for group {grp}"
+                )
+    if with_replacement == True:
+        for grp, _dat in df_groups:
+            if _dat.shape[0] < num_cells:
+                raise ValueError(f"Not enough cells for bootstrapping in group {grp}")
+
     bootstrap_samples = []  # create a list to store the bootstrap samples
     if seed == None:
         seed = np.random.randint(low=0, high=2**16, size=None)
@@ -79,6 +93,7 @@ def bootstrap_df(
         bootstrap_result = df_groups.apply(
             _bootstrap,  # apply the bootstrap function to each group
             num_cells=num_cells,
+            frac=frac,
             replace=with_replacement,
             metric=metric,
             seed=seed + b,
