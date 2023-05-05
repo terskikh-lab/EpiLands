@@ -75,7 +75,9 @@ def bootstrap_df(
     #             raise ValueError(
     #                 f"Group {group} has {size} cells, which is less than {num_cells} cells per bootstrap."
     #             )
-    for b in tqdm(range(num_bootstraps)):  # for each bootstrap
+
+    # for b in tqdm(range(num_bootstraps)):  # for each bootstrap
+    for b in range(num_bootstraps):  # for each bootstrap
         bootstrap_result = df_groups.apply(
             _bootstrap,  # apply the bootstrap function to each group
             num_cells=num_cells,
