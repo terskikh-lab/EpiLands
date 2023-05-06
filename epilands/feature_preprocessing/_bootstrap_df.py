@@ -5,7 +5,7 @@ import os
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-from typing import Callable
+from typing import Callable, Tuple
 from numbers import Number
 
 # from tqdm.notebook import tqdm, trange
@@ -25,7 +25,7 @@ def bootstrap_df(
     num_cells: int,
     frac: float = None,
     seed: int = None,
-):
+) -> Tuple[pd.DataFrame, pd.Series]:
     """
     Parameters
     ----------
@@ -75,9 +75,9 @@ def bootstrap_df(
     elif not isinstance(seed, Number):
         # logg.error(f"seed {seed} is not of type int")
         raise TypeError(f"seed {seed} is not a number")
-    group_sizes = {
-        str(group): data.shape[0] for group, data in df_groups
-    }  # create a dictionary of group sizes for QC
+    group_sizes = pd.Series(
+        {str(group): data.shape[0] for group, data in df_groups}, name="group_sizes"
+    )  # create a dictionary of group sizes for QC
     # if any(
     #     np.array(list(group_sizes.values())) < num_cells
     # ):  # if any group is too small to sample, raise an error and say why
