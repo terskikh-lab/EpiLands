@@ -4,7 +4,7 @@ import logging
 from typing import Union, Optional
 import pandas as pd
 from ._parse_imagelike_filename_metadata import parse_imagelike_filename_metadata
-from ._find_all_files import find_all_files
+from ..generic_read_write import find_all_files
 
 sub_package_name = os.path.split(os.path.dirname(os.path.abspath(__file__)))[1]
 logger = logging.getLogger(sub_package_name)
