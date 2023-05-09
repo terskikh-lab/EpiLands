@@ -78,7 +78,7 @@ def plot_categorical_scatter(
     )
     centroid_data.attrs["name"] = figurename + "_centroids"
     if save_info:
-        save_matplotlib_figure(fig, path=graph_output_folder, figurename=figurename)
+        save_matplotlib_figure(fig, path=graph_output_folder, filename=figurename)
     return fig, ax
 
 
