@@ -99,7 +99,14 @@ if USE_TF == False:
 
 if USE_TF == True:
     _TAS_2Dkernel = np.ones((3, 3, 1, 1))
-    _TAS_2Dkernel[1, 1, 0, 0, ] = _TAS_2Dkernel.sum() + 1
+    _TAS_2Dkernel[
+        1,
+        1,
+        0,
+        0,
+    ] = (
+        _TAS_2Dkernel.sum() + 1
+    )
     _TAS_binedges2D = np.arange(9.5, 19.5)
     _TAS_3Dkernel = np.ones((3, 3, 3, 1, 1))
     _TAS_3Dkernel[1, 1, 1, 0, 0] = _TAS_3Dkernel.sum() + 1
@@ -117,10 +124,10 @@ def _ctas_mod(
     if USE_TF == False:
         V = convolve(bwimg.astype(np.uint8), kernel, mode="same")
     elif USE_TF == True:
-        pad = np.array([[0,0]]*len(bwimg.shape))
+        pad = np.array([[0, 0]] * len(bwimg.shape))
         for i, d in enumerate(bwimg.shape):
             j = 0
-            while (d+j) % 3 != 0:
+            while (d + j) % 3 != 0:
                 j += 1
             if j > 0:
                 pad[i][0] = j
@@ -129,12 +136,9 @@ def _ctas_mod(
         bwimg = tf.constant(np.expand_dims(bwimg.astype(np.int32), axis=(0, -1)))
         bwimg = tf.cast(bwimg, tf.int32)
         V = tf.nn.convolution(
-            input=bwimg, 
-            filters=kernel, 
-            padding="SAME",
-            data_format="NHWC"
-            ).numpy()
-        
+            input=bwimg, filters=kernel, padding="SAME", data_format="NHWC"
+        ).numpy()
+
     # Count the values for each bin (10-19, ie white pixels with number of white neighbors)
     # Density=True calcualtes the PDF, which in the case of unit bin edges is the
     # equivalent of normalizing the values to their sum.
@@ -196,10 +200,11 @@ def count_pixels_tas(img: np.array) -> np.ndarray:
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
-    testImg = np.zeros(shape=(20,20,20))
-    testImg[:10,:10,:10] = 1
 
-    testImg = np.zeros(shape=(20,20))
-    testImg[:10,:10] = 1
-    
+    testImg = np.zeros(shape=(20, 20, 20))
+    testImg[:10, :10, :10] = 1
+
+    testImg = np.zeros(shape=(20, 20))
+    testImg[:10, :10] = 1
+
     count_pixels_tas(testImg)

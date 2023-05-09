@@ -1,7 +1,13 @@
 import numpy as np
-import numpy as np
+import pandas as pd
 from scipy.ndimage import center_of_mass
 from skimage.measure import moments
+from typing import Dict
+
+
+def object_pixel_count(image_data: Dict[str, np.ndarray]) -> pd.Series:
+    object_features = {f"MOR_object_pixel_count": np.count_nonzero(image_data["masks"])}
+    return pd.Series(object_features)
 
 
 def roundness(mask):
