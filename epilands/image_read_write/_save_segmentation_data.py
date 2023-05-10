@@ -3,7 +3,7 @@ import os
 import h5py
 from typing import Union
 
-# from ..image_preprocessing import object_cookie_cutter
+from ..image_preprocessing import object_cookie_cutter
 
 
 def save_segmentation_data(
