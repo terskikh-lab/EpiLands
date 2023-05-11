@@ -24,7 +24,7 @@ def bootstrap_df(
     num_bootstraps: int,
     num_cells: int,
     frac: float = None,
-    seed: int = None,
+    seed: int = np.random.seed(),
 ) -> Tuple[pd.DataFrame, pd.Series]:
     """
     Parameters
@@ -52,10 +52,7 @@ def bootstrap_df(
     #     f"Began bootstrapping {num_bootstraps} samples of {num_cells} cells from {group_by}"
     # )
 
-    df_groups = df.set_index(group_by, drop=True).groupby(
-        group_by
-    )  # group by the groupby columns
-
+    df_groups = df.set_index(group_by, drop=True).groupby(group_by, sort=False)
     if with_replacement == False:
         for grp, _dat in df_groups:
             max_bootstraps = _dat.shape[0] // num_cells
