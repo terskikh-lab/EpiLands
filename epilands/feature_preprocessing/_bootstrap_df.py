@@ -63,7 +63,8 @@ def bootstrap_df(
             # )
     if with_replacement == True:
         for grp, _dat in df_groups:
-            if _dat.shape[0] < num_cells:
+            # if _dat.shape[0] < num_cells:
+            if _dat.shape[0] < num_bootstraps:
                 raise ValueError(f"Not enough cells for bootstrapping in group {grp}")
 
     bootstrap_samples = []  # create a list to store the bootstrap samples
