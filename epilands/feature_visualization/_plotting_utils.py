@@ -5,7 +5,8 @@ import matplotlib.markers
 import matplotlib.pyplot as plt
 import numpy as np
 import re
-from IPython.display import display
+
+# from IPython.display import display
 
 # relative imports
 from ..config import (
@@ -74,7 +75,7 @@ def create_channel_mapping(
         channel_color_map_plt = map_keys_to_items(
             keys=channels, items=channel_color_pallete
         )
-        display(channel_color_map_plt)
+        # display(channel_color_map_plt)
         return channel_color_map_plt
     if package == "px":
         channel_color_pallete = transform_cmap_plotly_to_matplot(
@@ -83,7 +84,7 @@ def create_channel_mapping(
         channel_color_map_px = map_keys_to_items(
             keys=channels, items=channel_color_pallete
         )
-        display(channel_color_map_px)
+        # display(channel_color_map_px)
         return channel_color_map_px
     else:
         raise NotImplementedError(
@@ -147,7 +148,7 @@ def create_shape_mapping(legend_items: list, shapes: list = DEFAULT_SHAPE_PALETT
                 "\nExpect redundant marker mappings",
             )
     shape_map = map_keys_to_items(keys=legend_items, items=shapes)
-    display(shape_map)
+    # display(shape_map)
     return shape_map
 
 

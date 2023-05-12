@@ -13,7 +13,7 @@ def threshold_objects_histogram(
     low_threshold: float,
     range: tuple,
     title: str = None,
-    figurename: str = "object_size_thresholding",
+    filename: str = "object_size_thresholding",
     save_info: bool = False,
     graph_output_folder: str = None,
     set_xscale="linear",
@@ -38,5 +38,5 @@ def threshold_objects_histogram(
     ax.set_xscale(set_xscale)  # change the x-axis scale
     ax.set_yscale(set_yscale)  # change the y-axis scale
     if save_info == True:
-        save_matplotlib_figure(fig, path=graph_output_folder, figurename=figurename)
+        save_matplotlib_figure(fig, path=graph_output_folder, filename=filename)
     # plt.show() #show the figure

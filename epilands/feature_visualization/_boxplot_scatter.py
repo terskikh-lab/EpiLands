@@ -1,6 +1,6 @@
 # import libraries
 import matplotlib.pyplot as plt
-from IPython.display import display
+
 import pandas as pd
 import seaborn as sns
 from typing import List, Union
