@@ -61,11 +61,11 @@ def bootstrap_df(
             # raise ValueError(
             #     f"Not enough cells for {num_bootstraps} bootstraps to be in training set for group {grp}"
             # )
-    if with_replacement == True:
-        for grp, _dat in df_groups:
-            # if _dat.shape[0] < num_cells:
-            if _dat.shape[0] < num_bootstraps:
-                raise ValueError(f"Not enough cells for bootstrapping in group {grp}")
+    # if with_replacement == True:
+    #     for grp, _dat in df_groups:
+    #         # if _dat.shape[0] < num_cells:
+    #         if _dat.shape[0] < num_bootstraps:
+    #             raise ValueError(f"Not enough cells for bootstrapping in group {grp}")
 
     bootstrap_samples = []  # create a list to store the bootstrap samples
     if seed == None:
@@ -142,14 +142,16 @@ def _bootstrap(
         dataframe containing the bootstrap sample
     """
     try:
-        bootstrap_sample = df.sample(n=num_cells, replace=replace, random_state=seed)
+        bootstrap_sample = df.sample(
+            n=num_cells, frac=frac, replace=replace, random_state=seed
+        )
         bootstrap_result = bootstrap_sample.apply(metric, axis=0)
     except ValueError as e:
         if df.shape[0] < num_cells:
             print(f"Not enough cells to bootstrap, returning NaN")
             logger.error(e)
             logger.warning(f"Not enough cells to bootstrap, returning NaN")
-            bootstrap_result = bootstrap_sample.apply(lambda s: np.NaN, axis=0)
+            bootstrap_result = df.apply(lambda s: np.NaN, axis=0)
         else:
             raise e
     bootstrap_result["original_count"] = int(df.shape[0])
