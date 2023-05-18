@@ -56,10 +56,10 @@ def find_all_files(
         num_already_found = len(file_paths)
         for filename in filenames:
             if regex == False and pattern in filename:
-                logger.debug(f"found {filename} in {dirpath}")
+                # logger.debug(f"found {filename} in {dirpath}")
                 file_paths.append(os.path.join(dirpath, filename))
             elif regex == True and re.search(pattern, filename):
-                logger.debug(f"found {filename} in {dirpath}")
+                # logger.debug(f"found {filename} in {dirpath}")
                 file_paths.append(os.path.join(dirpath, filename))
         logger.debug(f"Found {len(file_paths)-num_already_found} files in {dirpath}")
     if len(file_paths) == 0:

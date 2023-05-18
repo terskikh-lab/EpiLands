@@ -55,7 +55,7 @@ def bootstrap_df(
         seed = np.random.randint(low=0, high=2**16, size=None)
     elif not isinstance(seed, Number):
         raise TypeError(f"seed {seed} is not a number")
-    logger.info(
+    logger.debug(
         f"Began calculating {metric} bootstrapping {num_bootstraps} samples of {num_cells} cells from {group_by}"
     )
     if isinstance(group_by, str) or len(group_by) == 1:
@@ -74,11 +74,13 @@ def bootstrap_df(
         for name, grpsize in group_sizes.items():
             print(name, grpsize)
             if grpsize < num_cells:
-                logger.warning(
-                    f"Dropping group, not enough cells for bootstrapping: {grp}"
+                # logger.warning(
+                #     f"Dropping group, not enough cells for bootstrapping: {grp} ({grpsize}) cells"
+                # )
+                # df_groups.drop(name, inplace=True)
+                raise ValueError(
+                    f"Not enough cells for bootstrapping in group: {grp} ({grpsize}) cells"
                 )
-                df_groups.drop(name, inplace=True)
-                # raise ValueError(f"Not enough cells for bootstrapping in group {grp}")
         # ddf_groups = dd.from_pandas(df_groups, npartitions=4).groupby(group_by)
 
     rng = np.random.default_rng(seed=seed)
@@ -141,7 +143,7 @@ def bootstrap_df(
     bootstrap_samples.reset_index(inplace=True, drop=True)
     bootstrap_samples[group_by] = original_cols
     bootstrap_samples.set_index(group_by, inplace=True)
-    logger.info(f"Bootstrapping completed")
+    logger.debug(f"Bootstrapping completed")
     return bootstrap_samples, group_sizes, seed
 
     # for b in range(num_bootstraps):  # for each bootstrap
