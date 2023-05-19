@@ -272,7 +272,14 @@ def shapelin3dinterp(mask, zSample, xSample, ySample):
 
 
 if __name__ == "__main__":
-    from stardist.models.model2d import StarDist2D
+    import tensorflow.config as tfc
+
+    gpuIdx = 1
+    gpus = tfc.list_physical_devices(device_type="GPU")
+    tfc.experimental.set_memory_growth(gpus[gpuIdx], True)
+    tfc.set_visible_devices(gpus[gpuIdx], "GPU")
+
+    # from stardist.models.model2d import StarDist2D
     from stardist.models.model3d import StarDist3D
     import tifffile as tiff
     import skimage
@@ -283,7 +290,7 @@ if __name__ == "__main__":
     import plotly.express as px
     import plotly.graph_objects as go
 
-    stardist_model_2d = StarDist2D.from_pretrained("2D_versatile_fluo")
+    # stardist_model_2d = StarDist2Dk.from_pretrained("2D_versatile_fluo")
     stardist_model_3d = StarDist3D.from_pretrained("3D_demo")
 
     from skimage.data import cells3d
@@ -355,6 +362,21 @@ if __name__ == "__main__":
     #                                     ]
     #                     )
     #     return fig
+    def glaylconvert(
+        img: np.ndarray,
+        orgLow: Union[int, float],
+        orgHigh: Union[int, float],
+        qLow: Union[int, float],
+        qHigh: Union[int, float],
+    ) -> np.ndarray:
+        """
+        glaylconvert: convert gray scale image to q-space
+        """
+        # Quantization of the grayscale levels in the ROI
+        img = np.where(img > orgHigh, orgHigh, img)
+        img = np.where(img < orgLow, orgLow, img)
+        cImg = ((img - orgLow) / (orgHigh - orgLow)) * (qHigh - qLow) + qLow
+        return cImg
 
     def segment_image_stardist3d(image) -> Tuple[np.ndarray, list, dict]:
         masks, details = stardist_model_3d.predict_instances(image)
@@ -394,21 +416,30 @@ if __name__ == "__main__":
         img, zxyInitialDims=(0.290, 0.26, 0.26), zxyFinalDims=(1, 0.5, 0.5)
     )
 
-    xslice = 100
-    zslice = 30
-    xslice1 = 50
-    zslice1 = 4
-    tiff.imshow(img[zslice, :, :])
-    tiff.imshow(img[:, xslice, :])
-    tiff.imshow(interpImg[zslice1, :, :])
-    tiff.imshow(interpImg[:, xslice1, :])
+    glaylconvert(
+        interpImg,
+        orgHigh=np.quantile(interpImg, 0.99),
+        orgLow=np.quantile(interpImg, 0.01),
+        qHigh=1,
+        qLow=0,
+    )
+
+    # xslice = 100
+    # zslice = 30
+    # xslice1 = 50
+    # zslice1 = 4
+    # tiff.imshow(img[zslice, :, :])
+    # tiff.imshow(img[:, xslice, :])
+    # tiff.imshow(interpImg[zslice1, :, :])
+    # tiff.imshow(interpImg[:, xslice1, :])
 
     masks, objects, details = segment_image_stardist3d(interpImg)
 
     interpmask = ezshapelin3dinterp(
         masks, zxyInitialDims=(0.290, 0.26, 0.26), zxyFinalDims=(0.26, 0.26, 0.26)
     )
-    tiff.imshow(masks[30, :, :])
-    tiff.imshow(masks[:, xslice, :])
-    tiff.imshow(interpmask[32, :, :])
-    tiff.imshow(interpmask[:, xslice, :])
+
+    # tiff.imshow(masks[30, :, :])
+    # tiff.imshow(masks[:, xslice, :])
+    # tiff.imshow(interpmask[32, :, :])
+    # tiff.imshow(interpmask[:, xslice, :])
