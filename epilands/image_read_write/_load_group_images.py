@@ -3,7 +3,7 @@ import os
 from typing import Dict
 from numpy import ndarray
 from concurrent.futures import ThreadPoolExecutor
-from ._read_zstack import read_zstack
+from ._read_images import read_images
 from ..image_qc import check_image_shapes
 
 sub_package_name = os.path.split(os.path.dirname(os.path.abspath(__file__)))[1]
@@ -16,7 +16,7 @@ def load_group_images(group_file_information) -> Dict[str, ndarray]:
     # read in the image data
     with ThreadPoolExecutor() as executor:
         image_data = {
-            channel: executor.submit(read_zstack, data["file_path"])
+            channel: executor.submit(read_images, data["file_path"])
             for channel, data in group_file_information.groupby(["channel"])
         }
     for image in image_data:
