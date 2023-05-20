@@ -2,7 +2,7 @@ from numba import jit
 import numpy as np
 from scipy.interpolate import interp1d
 from scipy import ndimage
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 # from ._get_object_bbox import get_object_bbox
 
@@ -161,7 +161,7 @@ def ezshapelin3dinterp(labelImg, zxyInitialDims: Tuple, zxyFinalDims: Tuple):
     # xSample = np.linspace(0,matX-1,np.floor(matX*xStep).astype(int))
     # ySample = np.linspace(0,matY-1,np.floor(matY*yStep).astype(int))
     # zSample = np.linspace(0,matZ-1,np.floor(matZ*zStep).astype(int))
-    interpImg = np.zeros((len(sample) for sample in dimSamples))
+    interpImg = np.zeros([len(sample) for sample in dimSamples])
     objects = np.unique(labelImg)
     objects = np.delete(objects, np.where(objects == 0))
     for cellIdx in objects:
@@ -177,9 +177,11 @@ def ezshapelin3dinterp(labelImg, zxyInitialDims: Tuple, zxyFinalDims: Tuple):
             dimSampleSpace = dimSamples[dim]
             # find where the sampled linspace is within 1 pixel of the bbox
             # this let's us not calculate all of the distances, ones to the left
-            leftOfIdxMin = dimSampleSpace[np.where(dimSampleSpace < idxMin)]
+            leftOfIdxMin = dimSampleSpace[np.where(dimSampleSpace <= idxMin)]
             # get closest idx (the last idx), ie the length of the array
-            nearestToIdxMin = len(leftOfIdxMin)
+            nearestToIdxMin = (
+                len(leftOfIdxMin) - 1
+            )  ####### added -1 because len starts at 1 and we want idx vals
             # get the value at that idx, ie the last value
             # this is the distance of that pixel in original pixel units
             minDistanceFromOrigin = leftOfIdxMin[-1]
@@ -191,7 +193,7 @@ def ezshapelin3dinterp(labelImg, zxyInitialDims: Tuple, zxyFinalDims: Tuple):
             # find the padded index for the left
             paddedIdxMin = idxMin - minMargin
             # repeat for right side
-            rightOfIdxMax = dimSampleSpace[np.where(dimSampleSpace > idxMax)]
+            rightOfIdxMax = dimSampleSpace[np.where(dimSampleSpace >= idxMax)]
             # need to subtract the length from the total, since index is left->right
             nearestToIdxMax = len(dimSampleSpace) - len(
                 rightOfIdxMax
@@ -210,13 +212,13 @@ def ezshapelin3dinterp(labelImg, zxyInitialDims: Tuple, zxyFinalDims: Tuple):
             interpEdgeLen = nearestToIdxMax - nearestToIdxMin + 1  # ??
             # get the sample space in cropped-image units for the interpolated image
             croppedSample = np.linspace(
-                minDistanceFromOrigin - paddedIdxMin,
-                maxDistanceFromOrigin - paddedIdxMin,
-                interpEdgeLen,
+                start=minDistanceFromOrigin - paddedIdxMin,
+                stop=maxDistanceFromOrigin - paddedIdxMin,
+                num=interpEdgeLen,
             )
             # save the values
             objectBBoxSamples.append(croppedSample)
-            objectPaddedBBox.append((paddedIdxMin, paddedIdxMax))
+            objectPaddedBBox.append((int(paddedIdxMin), int(paddedIdxMax)))
             objectInterpLoc.append((nearestToIdxMin, nearestToIdxMax))
 
         objCellLabel = objCellLabel[
@@ -241,12 +243,89 @@ def ezshapelin3dinterp(labelImg, zxyInitialDims: Tuple, zxyFinalDims: Tuple):
     return interpImg
 
 
+def ezresizemask(labelImg, zxyInitialDims: Tuple, zxyFinalDims: Tuple):
+    # The ratio of the physical len of vox in z vs x or y (voxel edge length)
+    dimSteps = (
+        zxyInitialDims[0] / zxyFinalDims[0],
+        zxyInitialDims[1] / zxyFinalDims[1],
+        zxyInitialDims[2] / zxyFinalDims[2],
+    )
+    imgDims = labelImg.shape
+    dimSamples = [
+        np.linspace(0, dim - 1, np.floor(dim * step).astype(int))
+        for dim, step in zip(imgDims, dimSteps)
+    ]
+    interpImg = np.zeros([len(sample) for sample in dimSamples])
+    objects = np.unique(labelImg)
+    objects = np.delete(objects, np.where(objects == 0))
+    for cellIdx in objects:
+        # get the binary image of the "celIdxl"-th cell
+        objCellLabel = np.where(
+            labelImg == cellIdx, 1, 0
+        )  # set teh value one to the "celIdxl"-th cell, zero for the others
+        objectBBox = get_object_bbox(objCellLabel)
+        objCellLabel = objCellLabel[
+            objectBBox[0][0] : objectBBox[0][1],
+            objectBBox[1][0] : objectBBox[1][1],
+            objectBBox[2][0] : objectBBox[2][1],
+        ]
+        objectInterpLoc = []
+        for dim, (idxMin, idxMax) in enumerate(objectBBox):
+            dimSampleSpace = dimSamples[dim]
+            # find where the sampled linspace is within 1 pixel of the bbox
+            # this let's us not calculate all of the distances, ones to the left
+            leftOfIdxMin = dimSampleSpace[np.where(dimSampleSpace <= idxMin)]
+            # get closest idx (the last idx), ie the length of the array
+            nearestToIdxMin = (
+                len(leftOfIdxMin) - 1
+            )  ####### added -1 because len starts at 1 and we want idx vals
+            rightOfIdxMax = dimSampleSpace[np.where(dimSampleSpace >= idxMax)]
+            # need to subtract the length from the total, since index is left->right
+            nearestToIdxMax = len(dimSampleSpace) - len(
+                rightOfIdxMax
+            )  #########May or may not need to add 1
+            objectInterpLoc.append((nearestToIdxMin, nearestToIdxMax))
+
+        matZ, matX, matY = objCellLabel.shape
+        maskEdge = objCellLabel.copy().astype(np.float64)
+        # get the edge of the mask using morphological erosion for each slice
+        # and covert it to distance map
+        for z in range(matZ):
+            # zeropadding the image
+            tmpMask = np.zeros((matX + 2, matY + 2), dtype=np.uint8)
+            tmpMask[1:-1, 1:-1] = objCellLabel[z, :, :]
+            if np.sum(objCellLabel[z, :, :]) == 0:
+                maskEdge[z, :, :] = -1
+                continue
+
+            maskEdge[z, :, :] = (
+                ndimage.distance_transform_edt(tmpMask)
+                - ndimage.distance_transform_edt(1 - tmpMask)
+            )[1:-1, 1:-1]
+
+        interpImgSlice = interpImg[
+            objectInterpLoc[0][0] : objectInterpLoc[0][1],
+            objectInterpLoc[1][0] : objectInterpLoc[1][1],
+            objectInterpLoc[2][0] : objectInterpLoc[2][1],
+        ]
+        interpMask = skimage.transform.resize(
+            maskEdge, output_shape=interpImgSlice.shape
+        )
+        # interpMask = skimage.transform.rescale(maskEdge, scale=dimSteps) #initially used this, but size was diff. Now using resize
+        labeledImgSlice = np.where(interpMask > 0, cellIdx, interpImgSlice)
+        interpImg[
+            objectInterpLoc[0][0] : objectInterpLoc[0][1],
+            objectInterpLoc[1][0] : objectInterpLoc[1][1],
+            objectInterpLoc[2][0] : objectInterpLoc[2][1],
+        ] = labeledImgSlice
+    return interpImg
+
+
 def shapelin3dinterp(mask, zSample, xSample, ySample):
     """
     np.linspace(delta1, delta1+n, n)
 
     """
-
     matZ, matX, matY = mask.shape
     maskEdge = mask.copy().astype(np.float64)
     # get the edge of the mask using morphological erosion for each slice
@@ -272,12 +351,12 @@ def shapelin3dinterp(mask, zSample, xSample, ySample):
 
 
 if __name__ == "__main__":
-    import tensorflow.config as tfc
+    # import tensorflow.config as tfc
 
-    gpuIdx = 1
-    gpus = tfc.list_physical_devices(device_type="GPU")
-    tfc.experimental.set_memory_growth(gpus[gpuIdx], True)
-    tfc.set_visible_devices(gpus[gpuIdx], "GPU")
+    # gpuIdx = 1
+    # gpus = tfc.list_physical_devices(device_type="GPU")
+    # tfc.experimental.set_memory_growth(gpus[gpuIdx], True)
+    # tfc.set_visible_devices(gpus[gpuIdx], "GPU")
 
     # from stardist.models.model2d import StarDist2D
     from stardist.models.model3d import StarDist3D
@@ -287,8 +366,6 @@ if __name__ == "__main__":
     import numpy as np
     import pandas as pd
     import os
-    import plotly.express as px
-    import plotly.graph_objects as go
 
     # stardist_model_2d = StarDist2Dk.from_pretrained("2D_versatile_fluo")
     stardist_model_3d = StarDist3D.from_pretrained("3D_demo")
@@ -297,71 +374,6 @@ if __name__ == "__main__":
 
     img = cells3d()[:, 1, :, :]
 
-    # def plotly_3d_img(tmpImg):
-    #     # ==========================================================================================
-    #     # tmpImg=cellImgList[cellIdx][keyList[i]]
-    #     # tmpImg[~mask]=plotMin-1
-    #     # plotMin=tmpImg[mask].min()
-    #     # plotMax=tmpImg[mask].max()
-    #     plotMin=tmpImg.min()
-    #     plotMax=tmpImg.max()
-    #     # tmpImg=np.swapaxes(tmpImg,0,2)
-
-    #     #create a volume array to show the selected slice
-    #     X, Y, Z = np.meshgrid(np.linspace(0,tmpImg.shape[0],tmpImg.shape[0]),
-    #                                 np.linspace(0,tmpImg.shape[0],tmpImg.shape[0]),
-    #                                 np.linspace(0,tmpImg.shape[0],tmpImg.shape[0]),
-    #                                 sparse=False, indexing='xy')
-    #     fig = go.Figure()
-    #     fig.add_traces(data=go.Volume(
-    #                         x=Y.flatten(),
-    #                         y=X.flatten(),
-    #                         z=Z.flatten(),
-    #                         value=tmpImg.flatten(),
-    #                         isomin=plotMin,
-    #                         isomax=plotMax,
-    #                         opacity=0.03, # needs to be small to see through all surfaces
-    #                         surface_count=64, # needs to be a large number for good volume rendering
-    #                         surface_show=True,
-    #                         # colorscale=colors[i-1],
-    #                         showscale=False))
-
-    #     ang=225
-    #     # eyeX,eyeY,eyeZ=polar2cart(2.5,75,ang)
-    #     fig.update_layout(font=dict(family="Arial",
-    #                                 size=15.7,
-    #                                 color="black"),
-    #                     paper_bgcolor='white',
-    #                     scene = dict(
-    #                             xaxis = dict(title = 'x'),
-    #                             yaxis = dict(title = 'y'),
-    #                             zaxis = dict(title = 'z')),
-    #                     # scene_camera=dict(
-    #                     #     eye=dict(x=eyeX, y=eyeY, z=eyeZ),
-    #                     #     up=dict(x=0, y=0, z=1)),
-    #                     width=800,height=800,
-    #                     coloraxis_colorbar_len=0.5,
-    #                     scene_aspectmode='cube',
-    #                     updatemenus=[dict(type='buttons',
-    #                                 showactive=False,
-    #                                 y=1,
-    #                                 x=0.8,
-    #                                 xanchor='left',
-    #                                 yanchor='bottom',
-    #                                 pad=dict(t=45, r=10),
-    #                                 buttons=[dict(label='Play',
-    #                                                 method='animate',
-    #                                                 args=[None, dict(frame=dict(duration=7, redraw=True),
-    #                                                                             transition=dict(duration=0),
-    #                                                                             fromcurrent=True,
-    #                                                                             mode='immediate'
-    #                                                                             )]
-    #                                                             )
-    #                                                     ]
-    #                                                 )
-    #                                     ]
-    #                     )
-    #     return fig
     def glaylconvert(
         img: np.ndarray,
         orgLow: Union[int, float],
@@ -386,9 +398,7 @@ if __name__ == "__main__":
         objects = list(np.delete(objects, 0))
         return masks, objects, details
 
-    # def read_zstack(
-    #     image_files
-    # ):
+    # def read_zstack(image_files):
     #     if not isinstance(image_files, pd.Series):
     #         image_files = pd.Series(image_files)
     #     image_files = image_files.sort_values()
@@ -401,22 +411,17 @@ if __name__ == "__main__":
     # imgdir = "/Volumes/1TBAlexey2/test_data/1_phenix_image"
     # image_files = [imgdir + "/" + file for file in os.listdir(imgdir)]
     # img = read_zstack(image_files)
-    # img
-    # fig = px.scatter_3d(
-    #     z=img.shape[0],
-    #     x=img.shape[1],
-    #     y=img.shape[2],
-    #     values = img.flatten()
-    #     )
-
-    # fig = plotly_3d_img(img[:,0:50, 0:50])
-    # fig.write_html("/Volumes/1TBAlexey2/test_data/testimg.html")
 
     interpImg = ezlin3dinterp(
-        img, zxyInitialDims=(0.290, 0.26, 0.26), zxyFinalDims=(1, 0.5, 0.5)
+        # img,
+        # zxyInitialDims=(1, 0.6, 0.6),
+        # zxyFinalDims=(1, 0.5, 0.5)
+        img,
+        zxyInitialDims=(0.290, 0.26, 0.26),
+        zxyFinalDims=(1, 0.5, 0.5),
     )
 
-    glaylconvert(
+    ninterpImg = glaylconvert(
         interpImg,
         orgHigh=np.quantile(interpImg, 0.99),
         orgLow=np.quantile(interpImg, 0.01),
@@ -426,20 +431,33 @@ if __name__ == "__main__":
 
     # xslice = 100
     # zslice = 30
-    # xslice1 = 50
-    # zslice1 = 4
     # tiff.imshow(img[zslice, :, :])
     # tiff.imshow(img[:, xslice, :])
-    # tiff.imshow(interpImg[zslice1, :, :])
-    # tiff.imshow(interpImg[:, xslice1, :])
+    xslice1 = 50
+    zslice1 = 7
+    # xslice1 = 263
+    # zslice1 = 7
+    # tiff.imshow(ninterpImg[zslice1, :, :])
+    # tiff.imshow(ninterpImg[:, xslice1, :])
 
-    masks, objects, details = segment_image_stardist3d(interpImg)
+    masks, objects, details = segment_image_stardist3d(ninterpImg)
+    # tiff.imwrite("/Volumes/1TBAlexey2/test_data/1_phenix_image_masks.tiff", data=masks)
+    # masks = tiff.imread("/Volumes/1TBAlexey2/test_data/1_phenix_image_masks.tiff")
 
-    interpmask = ezshapelin3dinterp(
-        masks, zxyInitialDims=(0.290, 0.26, 0.26), zxyFinalDims=(0.26, 0.26, 0.26)
+    interpmask = ezresizemask(
+        masks,
+        zxyInitialDims=(1, 0.6, 0.6),
+        zxyFinalDims=(0.6, 0.6, 0.6)
+        # masks, zxyInitialDims=(0.290, 0.26, 0.26), zxyFinalDims=(0.26, 0.26, 0.26)
     )
-
-    # tiff.imshow(masks[30, :, :])
-    # tiff.imshow(masks[:, xslice, :])
-    # tiff.imshow(interpmask[32, :, :])
-    # tiff.imshow(interpmask[:, xslice, :])
+    # interpmask = ezshapelin3dinterp(
+    #     masks, zxyInitialDims=(0.290, 0.26, 0.26), zxyFinalDims=(0.26, 0.26, 0.26)
+    # )
+    tiff.imshow(masks)
+    tiff.imshow(interpmask)
+    tiff.imshow(masks[:, xslice1, 260:330])
+    tiff.imshow(interpmask[:, xslice1, 260:330])
+    tiff.imshow(masks[zslice1, :, :])
+    tiff.imshow(interpmask[zslice1, :, :])
+    tiff.imshow(masks[:, xslice1, :])
+    tiff.imshow(interpmask[:, xslice1, :])
