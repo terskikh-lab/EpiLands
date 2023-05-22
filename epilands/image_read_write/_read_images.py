@@ -16,8 +16,10 @@ def read_images(
 ):
     if not isinstance(image_files, pd.Series):
         image_files = pd.Series(image_files)
-    image_files = image_files.sort_values(ascending=True)
-    tmpImg = tiff.imread(files=image_files.values)
+    image_files = image_files.sort_values(
+        ascending=True
+    )  ### Generalize regex for usage using plane -> int sorting
+    tmpImg = tiff.imread(files=image_files.to_list())
     if len(image_files) > 1 and return_3d == False:
         tmpImg = tmpImg.max(axis=0)
     return tmpImg

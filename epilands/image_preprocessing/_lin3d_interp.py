@@ -209,7 +209,7 @@ def ezshapelin3dinterp(labelImg, zxyInitialDims: Tuple, zxyFinalDims: Tuple):
             # croppedEdgeLen = paddedIdxMax - paddedIdxMin
 
             # get the edge len of the interpolated image in its own dimensions
-            interpEdgeLen = nearestToIdxMax - nearestToIdxMin + 1  # ??
+            interpEdgeLen = nearestToIdxMax - nearestToIdxMin  # + 1  # ??
             # get the sample space in cropped-image units for the interpolated image
             croppedSample = np.linspace(
                 start=minDistanceFromOrigin - paddedIdxMin,
@@ -227,18 +227,23 @@ def ezshapelin3dinterp(labelImg, zxyInitialDims: Tuple, zxyFinalDims: Tuple):
             objectPaddedBBox[2][0] : objectPaddedBBox[2][1],
         ]
 
+        interpImgSlice = interpImg[
+            objectInterpLoc[0][0] : objectInterpLoc[0][1],
+            objectInterpLoc[1][0] : objectInterpLoc[1][1],
+            objectInterpLoc[2][0] : objectInterpLoc[2][1],
+        ]
         interpMask = shapelin3dinterp(
             mask=objCellLabel,
             zSample=objectBBoxSamples[0],
             xSample=objectBBoxSamples[1],
             ySample=objectBBoxSamples[2],
         )
-
+        labeledImgSlice = np.where(interpMask > 0, cellIdx, interpImgSlice)
         interpImg[
             objectInterpLoc[0][0] : objectInterpLoc[0][1],
             objectInterpLoc[1][0] : objectInterpLoc[1][1],
             objectInterpLoc[2][0] : objectInterpLoc[2][1],
-        ] = interpMask
+        ] = labeledImgSlice
 
     return interpImg
 
@@ -450,11 +455,15 @@ if __name__ == "__main__":
         zxyFinalDims=(0.6, 0.6, 0.6)
         # masks, zxyInitialDims=(0.290, 0.26, 0.26), zxyFinalDims=(0.26, 0.26, 0.26)
     )
-    # interpmask = ezshapelin3dinterp(
-    #     masks, zxyInitialDims=(0.290, 0.26, 0.26), zxyFinalDims=(0.26, 0.26, 0.26)
-    # )
+    interpmask2 = ezshapelin3dinterp(
+        masks,
+        zxyInitialDims=(1, 0.6, 0.6),
+        zxyFinalDims=(0.6, 0.6, 0.6)
+        # masks, zxyInitialDims=(0.290, 0.26, 0.26), zxyFinalDims=(0.26, 0.26, 0.26)
+    )
     tiff.imshow(masks)
     tiff.imshow(interpmask)
+    tiff.imshow(interpmask2)
     tiff.imshow(masks[:, xslice1, 260:330])
     tiff.imshow(interpmask[:, xslice1, 260:330])
     tiff.imshow(masks[zslice1, :, :])
