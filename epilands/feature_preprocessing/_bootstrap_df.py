@@ -7,7 +7,7 @@ import numpy as np
 from tqdm import tqdm
 from typing import Callable, Tuple
 from numbers import Number
-
+import time
 import dask.dataframe as dd
 import dask.array as da
 
@@ -88,21 +88,44 @@ def bootstrap_df(
     elif isinstance(metric, Callable):
         _bootdf = lambda df: df.apply(metric, axis=0)
 
-    bootstrap_samples = []
-    for name, size in group_sizes.items():
-        dfgrp = df_groups.loc[name, :]
-        bootstrap_data = []
-        sample = rng.choice(size, size=num_cells * num_bootstraps, replace=True)
-        for b in range(num_bootstraps):
-            bsample = sample[b * num_cells : b * num_cells + num_cells]
-            bootstrap_data.append(_bootdf(dfgrp.iloc[bsample, :]))
-        bootstrap_samples.append(
-            pd.DataFrame(bootstrap_data, index=[name] * num_bootstraps)
-        )
+    if num_cells == 1:
+        logger.warn(f"num_cells = 1, so returning value rather than {metric}")
+        bootstrap_samples = []
+        for name, size in group_sizes.items():
+            # start = time.perf_counter()
+            dfgrp = df_groups.loc[name, :]
+            sample = rng.choice(size, size=num_cells * num_bootstraps, replace=True)
+            idx = [name] * num_bootstraps
+            bootstrap_data = dfgrp.iloc[sample, :]
+            bootstrap_data.index = idx
+            bootstrap_samples.append(
+                pd.DataFrame(bootstrap_data, index=[name] * num_bootstraps)
+            )
+            # stop = time.perf_counter()
+            # print(stop - start)
 
-    bootstrap_samples = pd.concat(
-        bootstrap_samples
-    )  # concatenate the bootstrap samples
+        bootstrap_samples = pd.concat(
+            bootstrap_samples
+        )  # concatenate the bootstrap samples
+    else:
+        bootstrap_samples = []
+        for name, size in group_sizes.items():
+            # start = time.perf_counter()
+            dfgrp = df_groups.loc[name, :]
+            bootstrap_data = []
+            sample = rng.choice(size, size=num_cells * num_bootstraps, replace=True)
+            for b in range(num_bootstraps):
+                bsample = sample[b * num_cells : b * num_cells + num_cells]
+                bootstrap_data.append(_bootdf(dfgrp.iloc[bsample, :]))
+            bootstrap_samples.append(
+                pd.DataFrame(bootstrap_data, index=[name] * num_bootstraps)
+            )
+            # stop = time.perf_counter()
+            # print(stop - start)
+
+        bootstrap_samples = pd.concat(
+            bootstrap_samples
+        )  # concatenate the bootstrap samples
 
     group_by = group_by.split("_")
     original_cols = bootstrap_samples.index.str.extract(
