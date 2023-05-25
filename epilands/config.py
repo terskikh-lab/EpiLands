@@ -50,7 +50,7 @@ DEFAULT_CHANNEL_PALETTE = [
     ]
 ]
 
-DEFAULT_CATEGORITCAL_PALETTE = (plt.get_cmap("tab20"),)
+DEFAULT_CATEGORITCAL_PALETTE = plt.get_cmap("tab20")
 DEFAULT_CATEGORICAL_CONTINUOUS_PALETTE = plt.get_cmap("nipy_spectral")
 DEFAULT_CONTINUOUS_COLOR_PALETTE = plt.get_cmap("inferno")
 
