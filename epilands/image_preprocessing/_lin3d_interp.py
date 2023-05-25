@@ -25,6 +25,15 @@ def get_object_bbox(bwImg: np.ndarray, margin: int = None) -> List[Tuple]:
         # add the margin to the bbox
         for i, (idxMin, idxMax) in objectBBox:
             objectBBox[i] = (idxMin + margin, idxMax + margin)
+    # for debug
+    # img = bwImg.copy()
+    # img[
+    #             objectBBox[0][0] : objectBBox[0][1],
+    #             objectBBox[1][0] : objectBBox[1][1],
+    #             objectBBox[2][0] : objectBBox[2][1],
+    #         ]=1
+    # img = np.where(bwImg==1, 10, img)
+    # tiff.imshow(img)
     return objectBBox
 
 
@@ -193,7 +202,7 @@ def ezshapelin3dinterp(labelImg, zxyInitialDims: Tuple, zxyFinalDims: Tuple):
             # find the padded index for the left
             paddedIdxMin = idxMin - minMargin
             # repeat for right side
-            rightOfIdxMax = dimSampleSpace[np.where(dimSampleSpace >= idxMax)]
+            rightOfIdxMax = dimSampleSpace[np.where(dimSampleSpace >= idxMax - 1)]
             # need to subtract the length from the total, since index is left->right
             nearestToIdxMax = len(dimSampleSpace) - len(
                 rightOfIdxMax
@@ -284,29 +293,29 @@ def ezresizemask(labelImg, zxyInitialDims: Tuple, zxyFinalDims: Tuple):
             nearestToIdxMin = (
                 len(leftOfIdxMin) - 1
             )  ####### added -1 because len starts at 1 and we want idx vals
-            rightOfIdxMax = dimSampleSpace[np.where(dimSampleSpace >= idxMax)]
+            rightOfIdxMax = dimSampleSpace[np.where(dimSampleSpace >= idxMax - 1)]
             # need to subtract the length from the total, since index is left->right
             nearestToIdxMax = len(dimSampleSpace) - len(
                 rightOfIdxMax
             )  #########May or may not need to add 1
             objectInterpLoc.append((nearestToIdxMin, nearestToIdxMax))
 
-        matZ, matX, matY = objCellLabel.shape
-        maskEdge = objCellLabel.copy().astype(np.float64)
-        # get the edge of the mask using morphological erosion for each slice
-        # and covert it to distance map
-        for z in range(matZ):
-            # zeropadding the image
-            tmpMask = np.zeros((matX + 2, matY + 2), dtype=np.uint8)
-            tmpMask[1:-1, 1:-1] = objCellLabel[z, :, :]
-            if np.sum(objCellLabel[z, :, :]) == 0:
-                maskEdge[z, :, :] = -1
-                continue
+        # matZ, matX, matY = objCellLabel.shape
+        # maskEdge = objCellLabel.copy().astype(np.float64)
+        # # get the edge of the mask using morphological erosion for each slice
+        # # and covert it to distance map
+        # for z in range(matZ):
+        #     # zeropadding the image
+        #     tmpMask = np.zeros((matX + 2, matY + 2), dtype=np.uint8)
+        #     tmpMask[1:-1, 1:-1] = objCellLabel[z, :, :]
+        #     if np.sum(objCellLabel[z, :, :]) == 0:
+        #         maskEdge[z, :, :] = -1
+        #         continue
 
-            maskEdge[z, :, :] = (
-                ndimage.distance_transform_edt(tmpMask)
-                - ndimage.distance_transform_edt(1 - tmpMask)
-            )[1:-1, 1:-1]
+        #     maskEdge[z, :, :] = (
+        #         ndimage.distance_transform_edt(tmpMask)
+        #         - ndimage.distance_transform_edt(1 - tmpMask)
+        #     )[1:-1, 1:-1]
 
         interpImgSlice = interpImg[
             objectInterpLoc[0][0] : objectInterpLoc[0][1],
@@ -314,7 +323,7 @@ def ezresizemask(labelImg, zxyInitialDims: Tuple, zxyFinalDims: Tuple):
             objectInterpLoc[2][0] : objectInterpLoc[2][1],
         ]
         interpMask = skimage.transform.resize(
-            maskEdge, output_shape=interpImgSlice.shape
+            objCellLabel > 0, output_shape=interpImgSlice.shape
         )
         # interpMask = skimage.transform.rescale(maskEdge, scale=dimSteps) #initially used this, but size was diff. Now using resize
         labeledImgSlice = np.where(interpMask > 0, cellIdx, interpImgSlice)
@@ -403,27 +412,27 @@ if __name__ == "__main__":
         objects = list(np.delete(objects, 0))
         return masks, objects, details
 
-    # def read_zstack(image_files):
-    #     if not isinstance(image_files, pd.Series):
-    #         image_files = pd.Series(image_files)
-    #     image_files = image_files.sort_values()
-    #     full_stack = [tiff.imread(file) for file in image_files]
-    #     tmpImg = np.empty(shape=(len(image_files), *full_stack[0].shape))
-    #     for i, img in enumerate(full_stack):
-    #         tmpImg[i] = img
-    #     return tmpImg
+    def read_zstack(image_files):
+        if not isinstance(image_files, pd.Series):
+            image_files = pd.Series(image_files)
+        image_files = image_files.sort_values()
+        full_stack = [tiff.imread(file) for file in image_files]
+        tmpImg = np.empty(shape=(len(image_files), *full_stack[0].shape))
+        for i, img in enumerate(full_stack):
+            tmpImg[i] = img
+        return tmpImg
 
-    # imgdir = "/Volumes/1TBAlexey2/test_data/1_phenix_image"
-    # image_files = [imgdir + "/" + file for file in os.listdir(imgdir)]
-    # img = read_zstack(image_files)
+    imgdir = "/Volumes/1TBAlexey2/test_data/1_phenix_image"
+    image_files = [imgdir + "/" + file for file in os.listdir(imgdir)]
+    img = read_zstack(image_files)
 
     interpImg = ezlin3dinterp(
-        # img,
-        # zxyInitialDims=(1, 0.6, 0.6),
-        # zxyFinalDims=(1, 0.5, 0.5)
         img,
-        zxyInitialDims=(0.290, 0.26, 0.26),
-        zxyFinalDims=(1, 0.5, 0.5),
+        zxyInitialDims=(1, 0.6, 0.6),
+        zxyFinalDims=(1, 0.5, 0.5)
+        # img,
+        # zxyInitialDims=(0.290, 0.26, 0.26),
+        # zxyFinalDims=(1, 0.5, 0.5),
     )
 
     ninterpImg = glaylconvert(
@@ -445,26 +454,44 @@ if __name__ == "__main__":
     # tiff.imshow(ninterpImg[zslice1, :, :])
     # tiff.imshow(ninterpImg[:, xslice1, :])
 
-    masks, objects, details = segment_image_stardist3d(ninterpImg)
+    # masks, objects, details = segment_image_stardist3d(ninterpImg)
     # tiff.imwrite("/Volumes/1TBAlexey2/test_data/1_phenix_image_masks.tiff", data=masks)
-    # masks = tiff.imread("/Volumes/1TBAlexey2/test_data/1_phenix_image_masks.tiff")
+    masks = tiff.imread("/Volumes/1TBAlexey2/test_data/1_phenix_image_masks.tiff")
 
-    interpmask = ezresizemask(
+    # interpmask = ezresizemask(
+    #     masks,
+    #     zxyInitialDims=(1, 0.6, 0.6),
+    #     zxyFinalDims=(0.6, 0.6, 0.6)
+    #     # masks, zxyInitialDims=(0.290, 0.26, 0.26), zxyFinalDims=(0.26, 0.26, 0.26)
+    # )
+    interpmask = ezshapelin3dinterp(
         masks,
-        zxyInitialDims=(1, 0.6, 0.6),
+        zxyInitialDims=(2, 1, 1),
         zxyFinalDims=(0.6, 0.6, 0.6)
-        # masks, zxyInitialDims=(0.290, 0.26, 0.26), zxyFinalDims=(0.26, 0.26, 0.26)
+        # masks,
+        # zxyInitialDims=(0.290, 0.26, 0.26),
+        # zxyFinalDims=(0.26, 0.26, 0.26),
+        # masks,
+        # zxyInitialDims=(1, 0.5, 0.5),
+        # zxyFinalDims=(0.26, 0.26, 0.26),
     )
-    interpmask2 = ezshapelin3dinterp(
-        masks,
-        zxyInitialDims=(1, 0.6, 0.6),
+    interpImg2 = ezlin3dinterp(
+        interpImg,
+        zxyInitialDims=(1, 0.5, 0.5),
         zxyFinalDims=(0.6, 0.6, 0.6)
-        # masks, zxyInitialDims=(0.290, 0.26, 0.26), zxyFinalDims=(0.26, 0.26, 0.26)
+        # interpImg,
+        # zxyInitialDims=(0.290, 0.26, 0.26),
+        # zxyFinalDims=(0.26, 0.26, 0.26),
+        # interpImg,
+        # zxyInitialDims=(1, 0.5, 0.5),
+        # zxyFinalDims=(0.26, 0.26, 0.26),
     )
+
     tiff.imshow(masks)
     tiff.imshow(interpmask)
-    tiff.imshow(interpmask2)
+    # tiff.imshow(interpmask2)
     tiff.imshow(masks[:, xslice1, 260:330])
+    tiff.imshow(img[:, xslice1, 260:330])
     tiff.imshow(interpmask[:, xslice1, 260:330])
     tiff.imshow(masks[zslice1, :, :])
     tiff.imshow(interpmask[zslice1, :, :])
