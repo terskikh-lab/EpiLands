@@ -55,15 +55,17 @@ def bootstrap_df(
     if isinstance(group_by, str) or len(group_by) == 1:
         df_groups = df.set_index(group_by).drop(group_by, axis=1)
     else:
-        df_groups = df.set_index(df[group_by].apply("_".join, axis=1)).drop(
+        df_groups = df.set_index(df[group_by].apply("|".join, axis=1)).drop(
             group_by, axis=1
         )
-        group_by = "_".join(group_by)
+        group_by = "|".join(group_by)
         df_groups.index.name = group_by
     df = None
 
     group_sizes = df_groups.index.value_counts().sort_index()
     num_bootstraps = min(group_sizes)
+    if num_bootstraps == 1:
+        raise ValueError(f"Not enough cells for bootstrapping")
     if any(group_sizes < num_cells):
         for name, grpsize in group_sizes.items():
             print(name, grpsize)
@@ -127,9 +129,9 @@ def bootstrap_df(
             bootstrap_samples
         )  # concatenate the bootstrap samples
 
-    group_by = group_by.split("_")
+    group_by = group_by.split("|")
     original_cols = bootstrap_samples.index.str.extract(
-        "_".join(["([A-Za-z0-9-]+)"] * len(group_by))
+        "\|".join(["([A-Za-z0-9-_]+)"] * len(group_by))
     ).rename({i: col for i, col in enumerate(group_by)}, axis=1)
     bootstrap_samples.reset_index(inplace=True, drop=True)
     bootstrap_samples[group_by] = original_cols
