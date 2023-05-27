@@ -75,7 +75,7 @@ def bootstrap_df(
                 # )
                 # df_groups.drop(name, inplace=True)
                 raise ValueError(
-                    f"Not enough cells for bootstrapping in group: {grp} ({grpsize}) cells"
+                    f"Not enough cells for bootstrapping in group: {name} ({grpsize}) cells"
                 )
     logger.debug(
         f"Began calculating {metric} bootstrapping {num_bootstraps} samples of {num_cells} cells from {group_by}"
