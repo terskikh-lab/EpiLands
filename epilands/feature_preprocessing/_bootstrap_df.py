@@ -55,7 +55,7 @@ def bootstrap_df(
     if isinstance(group_by, str) or len(group_by) == 1:
         df_groups = df.set_index(group_by).drop(group_by, axis=1)
     else:
-        df_groups = df.set_index(df[group_by].apply("|".join, axis=1)).drop(
+        df_groups = df.set_index(df[group_by].astype(str).apply("|".join, axis=1)).drop(
             group_by, axis=1
         )
         group_by = "|".join(group_by)
