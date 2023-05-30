@@ -74,6 +74,9 @@ def bootstrap_df(
                 #     f"Dropping group, not enough cells for bootstrapping: {grp} ({grpsize}) cells"
                 # )
                 # df_groups.drop(name, inplace=True)
+                logger.error(
+                    f"Not enough cells for bootstrapping in group: {name} ({grpsize}) cells"
+                )
                 raise ValueError(
                     f"Not enough cells for bootstrapping in group: {name} ({grpsize}) cells"
                 )
