@@ -24,6 +24,7 @@ def bootstrap_df(
     group_by: list,
     metric: Callable,
     num_cells: int,
+    num_bootstraps: int,
     seed: int = None,
 ) -> Tuple[pd.DataFrame, pd.Series]:
     """
@@ -63,9 +64,11 @@ def bootstrap_df(
     df = None
 
     group_sizes = df_groups.index.value_counts().sort_index()
-    num_bootstraps = min(group_sizes)
-    if num_bootstraps == 1:
-        raise ValueError(f"Not enough cells for bootstrapping")
+    # num_bootstraps = (
+    #     min(group_sizes) / num_cells if num_bootstraps is None else num_bootstraps
+    # )
+    # if num_bootstraps <= 1:
+    #     raise ValueError(f"Not enough cells for bootstrapping")
     if any(group_sizes < num_cells):
         for name, grpsize in group_sizes.items():
             print(name, grpsize)
@@ -75,11 +78,9 @@ def bootstrap_df(
                 # )
                 # df_groups.drop(name, inplace=True)
                 logger.error(
-                    f"Not enough cells for bootstrapping in group: {name} ({grpsize}) cells"
+                    f"Not enough cells for bootstrapping {num_cells} cells in group: {name} ({grpsize}) cells"
                 )
-                raise ValueError(
-                    f"Not enough cells for bootstrapping in group: {name} ({grpsize}) cells"
-                )
+        raise ValueError(f"Not enough cells for bootstrapping")
     logger.debug(
         f"Began calculating {metric} bootstrapping {num_bootstraps} samples of {num_cells} cells from {group_by}"
     )
