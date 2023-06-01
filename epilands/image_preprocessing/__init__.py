@@ -8,3 +8,4 @@ from ._segmentation_preprocess_threshold_resize_images import (
     segmentation_preprocess_threshold_resize_images,
 )
 from ._fit_illumination_correction import fit_illumination_correction_model
+from ._lin3d_interp import ezresizeimg, ezresizemask
