@@ -64,11 +64,11 @@ def bootstrap_df(
     df = None
 
     group_sizes = df_groups.index.value_counts().sort_index()
-    # num_bootstraps = (
-    #     min(group_sizes) / num_cells if num_bootstraps is None else num_bootstraps
-    # )
-    # if num_bootstraps <= 1:
-    #     raise ValueError(f"Not enough cells for bootstrapping")
+    num_bootstraps = (
+        min(group_sizes) / num_cells if num_bootstraps is None else num_bootstraps
+    )
+    if num_bootstraps <= 1:
+        raise ValueError(f"Not enough cells for bootstrapping")
     if any(group_sizes < num_cells):
         for name, grpsize in group_sizes.items():
             print(name, grpsize)
