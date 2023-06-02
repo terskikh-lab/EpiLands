@@ -450,7 +450,7 @@ if __name__ == "__main__":
     interpImg = ezresizeimg(
         img,
         InitialDims=(0.3, 0.3),
-        FinalDims=(0.5, 0.5),
+        FinalDims=(1, 1),
     )
 
     # interpImg = ezlin3dinterp(
@@ -490,7 +490,7 @@ if __name__ == "__main__":
 
     interpmask = ezresizemask(
         masks,
-        InitialDims=(0.5, 0.5),
+        InitialDims=(1, 1),
         FinalDims=(0.3, 0.3)
         # masks,
         # InitialDims=(1, 0.6, 0.6),
