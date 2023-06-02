@@ -3,6 +3,7 @@ import numpy as np
 from scipy.interpolate import interp1d
 from scipy import ndimage
 from typing import List, Tuple, Union
+import skimage
 
 # from ._get_object_bbox import get_object_bbox
 
