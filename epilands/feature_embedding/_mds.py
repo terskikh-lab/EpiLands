@@ -56,5 +56,5 @@ def generate_mds(
         save_dataframe_to_csv(df_mds_params, save_to)
         save_dataframe_to_csv(df_mds, save_to)
     print("MDS parameters: ", df_mds_params)
-    display(df_mds)
+    # display(df_mds)
     return mds, df_mds, df_mds_params
