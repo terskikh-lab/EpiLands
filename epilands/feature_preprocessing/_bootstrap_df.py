@@ -120,6 +120,7 @@ def bootstrap_df(
             # start = time.perf_counter()
             dfgrp = df_groups.loc[name, :]
             bootstrap_data = []
+            # CHANGE SIZE TO 2D ARRAY (num_cells, num_bootstraps) ~~~~~~~~~~~~~~~~~~~~~~~~~~~
             sample = rng.choice(size, size=num_cells * num_bootstraps, replace=True)
             for b in range(num_bootstraps):
                 bsample = sample[b * num_cells : b * num_cells + num_cells]
