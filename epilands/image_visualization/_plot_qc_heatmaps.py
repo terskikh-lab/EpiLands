@@ -23,15 +23,18 @@ def plot_qc_heatmaps(
 ) -> None:
     # plot the image QC data
     multi_process_helper = MultiProcessHelper(
-        pipe_name="plot_qc_heatmaps",
+        name="plot_qc_heatmaps",
         working_directory=output_directory,
-        sub_directories=[],
         loggers=[__name__],
     )
 
-    num_fovs = df_imageQC["FOV"].unique().shape[0] if "FOV" in df_imageQC.columns else 1
+    if "FieldOfView" in df_imageQC.columns:
+        num_fovs = df_imageQC["FieldOfView"].unique().shape[0]
+    else:
+        num_fovs = 1
+
     for col in df_imageQC.columns:
-        if col not in ["WellIndex", "FOV", "column", "row"]:
+        if col not in ["WellIndex", "FieldOfView", "Column", "Row"]:
             fig_name = f"{col}_heatmap"
             file_not_in_use = multi_process_helper.create_temp_file(
                 final_file_name=fig_name + ".pdf",
@@ -47,7 +50,7 @@ def plot_qc_heatmaps(
                 df_imageQC.reset_index(),
                 value_col=col,
                 wellindex_col="WellIndex",
-                fov_col="FOV",  # FUTURE: add grid capabilities, must modify h/v-lines below
+                fov_col="FieldOfView",  # FUTURE: add grid capabilities, must modify h/v-lines below
             )
             fig, ax = plot_heatmap(
                 df=df_plate,

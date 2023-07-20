@@ -40,7 +40,7 @@ def reshape_dataframe_to_plate(
     # df['Row'] = df[wellindex_col].map(lambda x: letters[int(str(x).replace('.0','')[:-3])-1])
     # df['Column'] = df[wellindex_col].map(lambda x: int(str(x).replace('.0','')[-2:]))
     if fov_col is None:
-        df_plate = df.pivot(index="row", columns="column", values=value_col)
+        df_plate = df.pivot(index="Row", columns="Column", values=value_col)
         df_plate.fillna(0, inplace=True)
         return df_plate
     if fov_col is not None:
@@ -51,6 +51,8 @@ def reshape_dataframe_to_plate(
         # df_plate = df.pivot(index=['Row', 'fov_row'],
         #                     columns=['Column', 'fov_col'],
         #                     values=value_col)
-        df_plate = df.pivot(index=["row", "FOV"], columns=["column"], values=value_col)
+        df_plate = df.pivot(
+            index=["Row", "FieldOfView"], columns=["Column"], values=value_col
+        )
         df_plate.fillna(0, inplace=True)
         return df_plate
