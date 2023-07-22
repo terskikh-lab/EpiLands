@@ -5,7 +5,7 @@ import os
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-from typing import Callable, Tuple
+from typing import Callable, Tuple, Union
 from numbers import Number
 import time
 import dask.dataframe as dd
@@ -23,7 +23,7 @@ def bootstrap_df(
     df: pd.DataFrame,
     group_by: list,
     metric: Callable,
-    num_cells: int,
+    num_cells: Union[int, str],
     num_bootstraps: int,
     seed: int = None,
 ) -> Tuple[pd.DataFrame, pd.Series]:
@@ -70,21 +70,22 @@ def bootstrap_df(
     # )
     # if num_bootstraps <= 1:
     #     raise ValueError(f"Not enough cells for bootstrapping")
-    if any(group_sizes < num_cells):
-        for name, grpsize in group_sizes.items():
-            print(name, grpsize)
-            if grpsize < num_cells:
-                # logger.warning(
-                #     f"Dropping group, not enough cells for bootstrapping: {grp} ({grpsize}) cells"
-                # )
-                # df_groups.drop(name, inplace=True)
-                logger.error(
-                    f"Not enough cells for bootstrapping {num_cells} cells in group: {name} ({grpsize}) cells"
-                )
-        raise ValueError(f"Not enough cells for bootstrapping")
-    logger.debug(
-        f"Began calculating {metric} bootstrapping {num_bootstraps} samples of {num_cells} cells from {group_by}"
-    )
+    if isinstance(num_cells, int):
+        if any(group_sizes < num_cells):
+            for name, grpsize in group_sizes.items():
+                print(name, grpsize)
+                if grpsize < num_cells:
+                    # logger.warning(
+                    #     f"Dropping group, not enough cells for bootstrapping: {grp} ({grpsize}) cells"
+                    # )
+                    # df_groups.drop(name, inplace=True)
+                    logger.error(
+                        f"Not enough cells for bootstrapping {num_cells} cells in group: {name} ({grpsize}) cells"
+                    )
+            raise ValueError(f"Not enough cells for bootstrapping")
+        logger.debug(
+            f"Began calculating {metric} bootstrapping {num_bootstraps} samples of {num_cells} cells from {group_by}"
+        )
 
     rng = np.random.default_rng(seed=seed)
 
@@ -95,6 +96,20 @@ def bootstrap_df(
     elif isinstance(metric, Callable):
         _bootdf = lambda df: df.apply(metric, axis=0)
 
+    if num_cells == "original":
+        bootstrap_samples = []
+        for name, size in group_sizes.items():
+            # start = time.perf_counter()
+            dfgrp = df_groups.loc[name, :]
+            bootstrap_data = []
+            sample = rng.choice(size, size=(num_bootstraps, size), replace=True)
+            for bsample in sample:
+                bootstrap_data.append(_bootdf(dfgrp.iloc[bsample, :]))
+            bootstrap_samples.append(
+                pd.DataFrame(bootstrap_data, index=[name] * num_bootstraps)
+            )
+            # stop = time.perf_counter()
+            # print(stop - start)
     if num_cells == 1:
         logger.warn(f"num_cells = 1, so returning value rather than {metric}")
         bootstrap_samples = []
@@ -121,9 +136,10 @@ def bootstrap_df(
             dfgrp = df_groups.loc[name, :]
             bootstrap_data = []
             # CHANGE SIZE TO 2D ARRAY (num_cells, num_bootstraps) ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            sample = rng.choice(size, size=num_cells * num_bootstraps, replace=True)
-            for b in range(num_bootstraps):
-                bsample = sample[b * num_cells : b * num_cells + num_cells]
+            # sample = rng.choice(size, size=num_bootstraps*num_cells, replace=True)
+            sample = rng.choice(size, size=(num_bootstraps, num_cells), replace=True)
+            for bsample in sample:
+                # bsample = sample[b * num_cells : b * num_cells + num_cells]
                 bootstrap_data.append(_bootdf(dfgrp.iloc[bsample, :]))
             bootstrap_samples.append(
                 pd.DataFrame(bootstrap_data, index=[name] * num_bootstraps)
