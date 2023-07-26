@@ -64,7 +64,6 @@ def bootstrap_df(
     df = None
 
     group_sizes = df_groups.index.value_counts().sort_index()
-    num_bootstraps = 1000
     # num_bootstraps = int(
     #     min(group_sizes) // num_cells if num_bootstraps is None else num_bootstraps
     # )
@@ -96,20 +95,6 @@ def bootstrap_df(
     elif isinstance(metric, Callable):
         _bootdf = lambda df: df.apply(metric, axis=0)
 
-    if num_cells == "original":
-        bootstrap_samples = []
-        for name, size in group_sizes.items():
-            # start = time.perf_counter()
-            dfgrp = df_groups.loc[name, :]
-            bootstrap_data = []
-            sample = rng.choice(size, size=(num_bootstraps, size), replace=True)
-            for bsample in sample:
-                bootstrap_data.append(_bootdf(dfgrp.iloc[bsample, :]))
-            bootstrap_samples.append(
-                pd.DataFrame(bootstrap_data, index=[name] * num_bootstraps)
-            )
-            # stop = time.perf_counter()
-            # print(stop - start)
     if num_cells == 1:
         logger.warn(f"num_cells = 1, so returning value rather than {metric}")
         bootstrap_samples = []
@@ -120,15 +105,29 @@ def bootstrap_df(
             idx = [name] * num_bootstraps
             bootstrap_data = dfgrp.iloc[sample, :]
             bootstrap_data.index = idx
+            bootstrap_data.loc["bootstrap"] = 1
             bootstrap_samples.append(
                 pd.DataFrame(bootstrap_data, index=[name] * num_bootstraps)
             )
             # stop = time.perf_counter()
             # print(stop - start)
 
-        bootstrap_samples = pd.concat(
-            bootstrap_samples
-        )  # concatenate the bootstrap samples
+    elif num_cells == "original":
+        bootstrap_samples = []
+        for name, size in group_sizes.items():
+            # start = time.perf_counter()
+            dfgrp = df_groups.loc[name, :]
+            bootstrap_data = []
+            sample = rng.choice(size, size=(num_bootstraps, size), replace=True)
+            for i, bsample in enumerate(sample):
+                df = _bootdf(dfgrp.iloc[bsample, :])
+                df.loc["bootstrap"] = i + 1
+                bootstrap_data.append(df)
+            bootstrap_samples.append(
+                pd.DataFrame(bootstrap_data, index=[name] * num_bootstraps)
+            )
+            # stop = time.perf_counter()
+            # print(stop - start)
     else:
         bootstrap_samples = []
         for name, size in group_sizes.items():
@@ -138,8 +137,10 @@ def bootstrap_df(
             # CHANGE SIZE TO 2D ARRAY (num_cells, num_bootstraps) ~~~~~~~~~~~~~~~~~~~~~~~~~~~
             # sample = rng.choice(size, size=num_bootstraps*num_cells, replace=True)
             sample = rng.choice(size, size=(num_bootstraps, num_cells), replace=True)
-            for bsample in sample:
+            for i, bsample in enumerate(sample):
                 # bsample = sample[b * num_cells : b * num_cells + num_cells]
+                df = _bootdf(dfgrp.iloc[bsample, :])
+                df.loc["bootstrap"] = i + 1
                 bootstrap_data.append(_bootdf(dfgrp.iloc[bsample, :]))
             bootstrap_samples.append(
                 pd.DataFrame(bootstrap_data, index=[name] * num_bootstraps)
@@ -147,9 +148,9 @@ def bootstrap_df(
             # stop = time.perf_counter()
             # print(stop - start)
 
-        bootstrap_samples = pd.concat(
-            bootstrap_samples
-        )  # concatenate the bootstrap samples
+    bootstrap_samples = pd.concat(
+        bootstrap_samples
+    )  # concatenate the bootstrap samples
 
     group_by = group_by.split("|")
     original_cols = bootstrap_samples.index.str.extract(
