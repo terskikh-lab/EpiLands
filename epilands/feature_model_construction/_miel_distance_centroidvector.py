@@ -85,7 +85,7 @@ class EpiAgeModel:
         self.n_features_in_ = len(self.feature_names_in_)
         self.classes_ = [reference_group_A, reference_group_B]
 
-        self.labels = df_groupby[group_by] == reference_group_B
+        self.labels = data.index == reference_group_B
         self.scores = self.score(data)
         self._roc_auc_analysis(self.scores, self.labels)
 
@@ -116,6 +116,7 @@ class EpiAgeModel:
             threshold = thresholds[np.argmin((tpr - 1) ** 2 + fpr**2)]
         else:
             threshold = (y_score[y_true].min() + y_score[~y_true].max()) / 2
+        y_pred = y_score > threshold
         self.auc = auc
         self.threshold = threshold
         self.accuracy_score = accuracy_score(y_true, y_pred)
