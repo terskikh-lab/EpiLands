@@ -68,8 +68,8 @@ class EpiAgeModel:
         if not isinstance(group_by, str):
             reference_group_A = reference_group_A[0]
             reference_group_B = reference_group_B[0]
-        df_groupby = data.groupby(group_by, as_index=True)
         data = data.set_index(group_by)
+        df_groupby = data.groupby(group_by, as_index=True)
         A_centroid = df_groupby.get_group(reference_group_A).mean()
         A_centroid.attrs["name"] = f"{join_iterable(reference_group_A)} centroid"
         B_centroid = df_groupby.get_group(reference_group_B).mean()
@@ -147,7 +147,7 @@ class EpiAgeModel:
             raise ValueError("input data missing features")
         EpiAgeOrthogonal = data.apply(self._ortho_distance, axis=1)
         EpiAgeOrthogonal.name = "EpiAgeOrthogonal"
-        return EpiAgeDistance
+        return EpiAgeOrthogonal
 
     def predict(self, data):
         y_pred = self.score(data) > self.threshold
