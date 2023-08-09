@@ -59,21 +59,19 @@ class EpiAgeModel:
     def fit(
         self,
         data: pd.DataFrame,
-        group_by: str,
-        reference_group_A: tuple,
-        reference_group_B: tuple,
+        sample_col: str,
+        group_col: str,
+        feature_cols,
+        group_A: str,
+        group_B: str,
     ):
-        if not isinstance(group_by, str) and len(group_by) > 1:
-            raise NotImplementedError("Cannot yet group by more than one label")
-        if not isinstance(group_by, str):
-            reference_group_A = reference_group_A[0]
-            reference_group_B = reference_group_B[0]
-        data = data.set_index(group_by)
-        df_groupby = data.groupby(group_by, as_index=True)
-        A_centroid = df_groupby.get_group(reference_group_A).mean()
-        A_centroid.attrs["name"] = f"{join_iterable(reference_group_A)} centroid"
-        B_centroid = df_groupby.get_group(reference_group_B).mean()
-        B_centroid.attrs["name"] = f"{join_iterable(reference_group_B)} centroid"
+        data = data.set_index([sample_col, group_col])
+        sample_means = data.groupby([sample_col, group_col])[feature_cols].mean()
+        groups = sample_means.groupby(group_col, as_index=True)
+        A_centroid = groups.get_group(group_A).mean()
+        A_centroid.attrs["name"] = f"{join_iterable(group_A)} centroid"
+        B_centroid = groups.get_group(group_B).mean()
+        B_centroid.attrs["name"] = f"{join_iterable(group_B)} centroid"
 
         self.A_centroid = A_centroid
         self.B_centroid = B_centroid
@@ -83,9 +81,9 @@ class EpiAgeModel:
         self.coef_ = self.epiAgeVec / self.l2_norm
         self.feature_names_in_ = data.columns
         self.n_features_in_ = len(self.feature_names_in_)
-        self.classes_ = [reference_group_A, reference_group_B]
+        self.classes_ = [group_A, group_B]
 
-        self.labels = data.index == reference_group_B
+        self.labels = data.index.to_series().apply(lambda idx: group_B in idx)
         self.scores = self.score(data)
         self._roc_auc_analysis(self.scores, self.labels)
 
@@ -96,13 +94,14 @@ class EpiAgeModel:
     def _vector_projection(self, data_vec):
         return np.dot(self._scalar_projection(data_vec), self.epiAgeVec / self.l2_norm)
 
+    def _ortho_projection(self, data_vec):
+        return data_vec - self.A_centroid - self._vector_projection(data_vec)
+
     def _ortho_distance(self, data_vec):
         # return np.linalg.norm(
         #     data_vec - self._vector_projection(data_vec), ord=2
         # )
-        return np.linalg.norm(
-            data_vec - self.A_centroid - self._vector_projection(data_vec), ord=2
-        )
+        return np.linalg.norm(self._ortho_projection(data_vec), ord=2)
 
     def _roc_auc_analysis(self, scores, labels):
         y_true = labels
@@ -138,15 +137,26 @@ class EpiAgeModel:
     def score(self, data):
         if any(i not in data.columns for i in self.feature_names_in_):
             raise ValueError("input data missing features")
-        EpiAgeDistance = data.apply(self._scalar_projection, axis=1)
+        EpiAgeDistance = data[self.feature_names_in_].apply(
+            self._scalar_projection, axis=1
+        )
         EpiAgeDistance.name = "EpiAgeDistance"
         return EpiAgeDistance
 
     def score_orthogonal(self, data):
         if any(i not in data.columns for i in self.feature_names_in_):
             raise ValueError("input data missing features")
-        EpiAgeOrthogonal = data.apply(self._ortho_distance, axis=1)
+        EpiAgeOrthogonal = data[self.feature_names_in_].apply(
+            self._ortho_distance, axis=1
+        )
         EpiAgeOrthogonal.name = "EpiAgeOrthogonal"
+        return EpiAgeOrthogonal
+
+    def project_orthogonal_subspace(self, data):
+        if any(i not in data.columns for i in self.feature_names_in_):
+            raise ValueError("input data missing features")
+        EpiAgeOrthogonal = data.apply(self._ortho_projection, axis=1)
+        # EpiAgeOrthogonal.name = "EpiAgeOrthogonal"
         return EpiAgeOrthogonal
 
     def predict(self, data):
@@ -158,8 +168,8 @@ class EpiAgeModel:
         self,
         data: pd.DataFrame,
         group_by: list,
-        reference_group_A: tuple,
-        reference_group_B: tuple,
+        group_A: tuple,
+        group_B: tuple,
     ):
-        self.fit(data, group_by, reference_group_A, reference_group_B)
+        self.fit(data, group_by, group_A, group_B)
         return pd.concat([self.scores, EpiAgeOrthogonal], axis=1, join="outer")

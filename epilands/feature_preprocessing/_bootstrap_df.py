@@ -141,7 +141,7 @@ def bootstrap_df(
                 # bsample = sample[b * num_cells : b * num_cells + num_cells]
                 df = _bootdf(dfgrp.iloc[bsample, :])
                 df.loc["bootstrap"] = i + 1
-                bootstrap_data.append(_bootdf(dfgrp.iloc[bsample, :]))
+                bootstrap_data.append(df)
             bootstrap_samples.append(
                 pd.DataFrame(bootstrap_data, index=[name] * num_bootstraps)
             )
