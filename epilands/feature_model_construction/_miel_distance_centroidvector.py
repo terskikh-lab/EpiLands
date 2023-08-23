@@ -52,7 +52,7 @@ def generate_MIEL_distance_centroidvector(
     return df_MIEL_distance
 
 
-class EpiAgeModel:
+class ChromAgeModel:
     def __init__(self) -> None:
         pass
 
@@ -137,27 +137,27 @@ class EpiAgeModel:
     def score(self, data):
         if any(i not in data.columns for i in self.feature_names_in_):
             raise ValueError("input data missing features")
-        EpiAgeDistance = data[self.feature_names_in_].apply(
+        ChromAgeDistance = data[self.feature_names_in_].apply(
             self._scalar_projection, axis=1
         )
-        EpiAgeDistance.name = "EpiAgeDistance"
-        return EpiAgeDistance
+        ChromAgeDistance.name = "ChromAgeDistance"
+        return ChromAgeDistance
 
     def score_orthogonal(self, data):
         if any(i not in data.columns for i in self.feature_names_in_):
             raise ValueError("input data missing features")
-        EpiAgeOrthogonal = data[self.feature_names_in_].apply(
+        ChromAgeOrthogonal = data[self.feature_names_in_].apply(
             self._ortho_distance, axis=1
         )
-        EpiAgeOrthogonal.name = "EpiAgeOrthogonal"
-        return EpiAgeOrthogonal
+        ChromAgeOrthogonal.name = "ChromAgeOrthogonal"
+        return ChromAgeOrthogonal
 
     def project_orthogonal_subspace(self, data):
         if any(i not in data.columns for i in self.feature_names_in_):
             raise ValueError("input data missing features")
-        EpiAgeOrthogonal = data.apply(self._ortho_projection, axis=1)
-        # EpiAgeOrthogonal.name = "EpiAgeOrthogonal"
-        return EpiAgeOrthogonal
+        ChromAgeOrthogonal = data.apply(self._ortho_projection, axis=1)
+        # ChromAgeOrthogonal.name = "ChromAgeOrthogonal"
+        return ChromAgeOrthogonal
 
     def predict(self, data):
         y_pred = self.score(data) > self.threshold
@@ -172,4 +172,4 @@ class EpiAgeModel:
         group_B: tuple,
     ):
         self.fit(data, group_by, group_A, group_B)
-        return pd.concat([self.scores, EpiAgeOrthogonal], axis=1, join="outer")
+        return pd.concat([self.scores, ChromAgeOrthogonal], axis=1, join="outer")
