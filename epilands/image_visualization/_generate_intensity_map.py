@@ -9,8 +9,6 @@ from ..generic_read_write import save_dataframe_to_csv
 def generate_intensity_map(
     df: pd.DataFrame,
     value_col: str,
-    save: bool,
-    output_directory: str,
     metric: str = "mean",
     quantile: float = None,
     wellindex_col: str = "WellIndex",
@@ -64,6 +62,4 @@ def generate_intensity_map(
     )
     df_intensity = pd.merge(df_intensity, df_metadata, on=wellindex_col)
     df_intensity.attrs["name"] = df.attrs["name"] + "_{}-perWell".format(name)
-    if save:
-        save_dataframe_to_csv(df_intensity, path=output_directory)
     return df_plate

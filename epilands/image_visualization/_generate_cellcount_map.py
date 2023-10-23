@@ -10,17 +10,11 @@ def generate_cellcount_map(
     df: pd.DataFrame,
     wellindex_col: str = "WellIndex",
     sample_col: str = "Sample",
-    output_directory: str = None,
-    save: bool = True,
 ) -> pd.DataFrame:
     """
     generates a cellcount map from a dataframe given the wellindex column and the sample column.
 
     df: pd.DataFrame
-
-    save: bool tells the function whether to save the cellcount map to a file
-
-    output_directory: str where to save the cellcount map
 
     wellindex_col: str the name of the column containing the wellindex
 
@@ -34,6 +28,4 @@ def generate_cellcount_map(
     df_plate = reshape_dataframe_to_plate(
         df_cellcounts, value_col="CellCounts", wellindex_col=wellindex_col
     )
-    if save == True:
-        save_dataframe_to_csv(df_cellcounts, path=output_directory)
     return df_plate
