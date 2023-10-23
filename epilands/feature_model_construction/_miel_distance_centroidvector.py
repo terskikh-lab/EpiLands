@@ -75,24 +75,32 @@ class ChromAgeModel:
 
         self.A_centroid = A_centroid
         self.B_centroid = B_centroid
-        self.epiAgeVec = B_centroid - A_centroid
-        self.l2_norm = np.linalg.norm(self.epiAgeVec.values, ord=2)
+        self.ChromAgeVec = B_centroid - A_centroid
+        self.l2_norm = np.linalg.norm(self.ChromAgeVec.values, ord=2)
 
-        self.coef_ = self.epiAgeVec / self.l2_norm
+        self.coef_ = self.ChromAgeVec / self.l2_norm
         self.feature_names_in_ = data.columns
         self.n_features_in_ = len(self.feature_names_in_)
         self.classes_ = [group_A, group_B]
 
-        self.labels = data.index.to_series().apply(lambda idx: group_B in idx)
         self.scores = self.score(data)
-        self._roc_auc_analysis(self.scores, self.labels)
+        refidx = np.logical_or(
+            data.index.get_level_values(1) == group_A,
+            data.index.get_level_values(1) == group_B,
+        )
+        reflabels = data[refidx].index.get_level_values(1) == group_B
+        refscores = self.scores[refidx]
+        # labels = data.index.to_series()[refidx].apply(lambda idx: group_B in idx)
+        self._roc_auc_analysis(refscores, reflabels)
 
     def _scalar_projection(self, data_vec):
-        # return np.dot(data_vec, self.epiAgeVec) / self.l2_norm
-        return np.dot((data_vec - self.A_centroid), self.epiAgeVec) / self.l2_norm
+        # return np.dot(data_vec, self.ChromAgeVec) / self.l2_norm
+        return np.dot((data_vec - self.A_centroid), self.ChromAgeVec) / self.l2_norm
 
     def _vector_projection(self, data_vec):
-        return np.dot(self._scalar_projection(data_vec), self.epiAgeVec / self.l2_norm)
+        return np.dot(
+            self._scalar_projection(data_vec), self.ChromAgeVec / self.l2_norm
+        )
 
     def _ortho_projection(self, data_vec):
         return data_vec - self.A_centroid - self._vector_projection(data_vec)
@@ -140,7 +148,7 @@ class ChromAgeModel:
         ChromAgeDistance = data[self.feature_names_in_].apply(
             self._scalar_projection, axis=1
         )
-        ChromAgeDistance.name = "ChromAgeDistance"
+        ChromAgeDistance.name = "ChromAge"
         return ChromAgeDistance
 
     def score_orthogonal(self, data):
