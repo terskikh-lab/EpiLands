@@ -12,6 +12,18 @@ logger = logging.getLogger(sub_package_name)
 
 def power_spectrum(image: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """
+    Calculates the power spectrum of a given image.
+
+    Parameters:
+    image (np.ndarray): The input image as a numpy array.
+
+    Returns:
+    Tuple[np.ndarray, np.ndarray]: A tuple containing two numpy arrays:
+        - kvals: The wave number bins.
+        - Abins: The average Fourier amplitude (squared) in each bin.
+
+    Credit:
+
     https://bertvandenbroucke.netlify.app/2019/05/24/computing-a-power-spectrum-in-python/
     """
     image = image.copy()

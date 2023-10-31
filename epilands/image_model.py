@@ -10,49 +10,7 @@ from sklearn.metrics import roc_curve, roc_auc_score, accuracy_score, confusion_
 # Relative imports
 
 
-def generate_MIEL_distance_centroidvector(
-    df: pd.DataFrame,
-    A_centroid: pd.Series,
-    B_centroid: pd.Series,
-):
-    """
-    generate_MIEL_distances
-
-    Parameters
-    ----------
-    df : dataframe
-        dataframe of features.
-
-    Returns
-    -------
-    df_MIEL_distances : dataframe
-        pandas dataframe of distances transformed via a linear transformation forming the MIEL/miBioAge axis
-    """
-
-    # Calculate centroid for transposition of A to (0,0)
-    AB_vec = B_centroid - A_centroid
-    AB_mag = np.sqrt(np.sum(np.square(AB_vec.values)))
-    # projection of vector A on vetor B is (A . B)/|B|
-    func_MIEL_dist = lambda data_vec: np.dot((data_vec - A_centroid), AB_vec) / AB_mag
-
-    def func_MIEL_dist_perp(data_vec):
-        data_vec = data_vec - A_centroid
-        data_mag = np.sqrt(np.sum(np.square(data_vec)))
-        theta = np.arccos(np.dot(data_vec, AB_vec) / (AB_mag * data_mag))
-        return data_mag * np.sin(theta)
-
-        # = lambda data_vec: np.sqrt(np.sum(np.square((np.cross(data_vec, AB_vec) / AB_mag))))
-
-    MIEL_distance = df.apply(func_MIEL_dist, axis=1)
-    MIEL_orthogonal = df.apply(func_MIEL_dist_perp, axis=1)
-    MIEL_distance.name = "MIEL_distance"
-    MIEL_orthogonal.name = "MIEL_orthogonal"
-
-    df_MIEL_distance = pd.concat([MIEL_distance, MIEL_orthogonal], axis=1, join="outer")
-    return df_MIEL_distance
-
-
-class ChromAgeModel:
+class ImAgeModel:
     def __init__(self) -> None:
         pass
 
@@ -75,10 +33,10 @@ class ChromAgeModel:
 
         self.A_centroid = A_centroid
         self.B_centroid = B_centroid
-        self.ChromAgeVec = B_centroid - A_centroid
-        self.l2_norm = np.linalg.norm(self.ChromAgeVec.values, ord=2)
+        self.ImAgeVec = B_centroid - A_centroid
+        self.l2_norm = np.linalg.norm(self.ImAgeVec.values, ord=2)
 
-        self.coef_ = self.ChromAgeVec / self.l2_norm
+        self.coef_ = self.ImAgeVec / self.l2_norm
         self.feature_names_in_ = data.columns
         self.n_features_in_ = len(self.feature_names_in_)
         self.classes_ = [group_A, group_B]
@@ -94,13 +52,11 @@ class ChromAgeModel:
         self._roc_auc_analysis(refscores, reflabels)
 
     def _scalar_projection(self, data_vec):
-        # return np.dot(data_vec, self.ChromAgeVec) / self.l2_norm
-        return np.dot((data_vec - self.A_centroid), self.ChromAgeVec) / self.l2_norm
+        # return np.dot(data_vec, self.ImAgeVec) / self.l2_norm
+        return np.dot((data_vec - self.A_centroid), self.ImAgeVec) / self.l2_norm
 
     def _vector_projection(self, data_vec):
-        return np.dot(
-            self._scalar_projection(data_vec), self.ChromAgeVec / self.l2_norm
-        )
+        return np.dot(self._scalar_projection(data_vec), self.ImAgeVec / self.l2_norm)
 
     def _ortho_projection(self, data_vec):
         return data_vec - self.A_centroid - self._vector_projection(data_vec)
@@ -145,27 +101,27 @@ class ChromAgeModel:
     def score(self, data):
         if any(i not in data.columns for i in self.feature_names_in_):
             raise ValueError("input data missing features")
-        ChromAgeDistance = data[self.feature_names_in_].apply(
+        ImAgeDistance = data[self.feature_names_in_].apply(
             self._scalar_projection, axis=1
         )
-        ChromAgeDistance.name = "ChromAge"
-        return ChromAgeDistance
+        ImAgeDistance.name = "ImAge"
+        return ImAgeDistance
 
     def score_orthogonal(self, data):
         if any(i not in data.columns for i in self.feature_names_in_):
             raise ValueError("input data missing features")
-        ChromAgeOrthogonal = data[self.feature_names_in_].apply(
+        ImAgeOrthogonal = data[self.feature_names_in_].apply(
             self._ortho_distance, axis=1
         )
-        ChromAgeOrthogonal.name = "ChromAgeOrthogonal"
-        return ChromAgeOrthogonal
+        ImAgeOrthogonal.name = "ImAgeOrthogonal"
+        return ImAgeOrthogonal
 
     def project_orthogonal_subspace(self, data):
         if any(i not in data.columns for i in self.feature_names_in_):
             raise ValueError("input data missing features")
-        ChromAgeOrthogonal = data.apply(self._ortho_projection, axis=1)
-        # ChromAgeOrthogonal.name = "ChromAgeOrthogonal"
-        return ChromAgeOrthogonal
+        ImAgeOrthogonal = data.apply(self._ortho_projection, axis=1)
+        # ImAgeOrthogonal.name = "ImAgeOrthogonal"
+        return ImAgeOrthogonal
 
     def predict(self, data):
         y_pred = self.score(data) > self.threshold
@@ -180,4 +136,4 @@ class ChromAgeModel:
         group_B: tuple,
     ):
         self.fit(data, group_by, group_A, group_B)
-        return pd.concat([self.scores, ChromAgeOrthogonal], axis=1, join="outer")
+        return pd.concat([self.scores, ImAgeOrthogonal], axis=1, join="outer")

@@ -3,6 +3,17 @@ from typing import List, Tuple
 
 
 def get_object_bbox(bwImg: np.ndarray, margin: int = None) -> List[Tuple]:
+    """
+    Get the bounding box of an object in a binary image.
+
+    Parameters:
+    bwImg (np.ndarray): A binary image represented as a numpy array.
+    margin (int): An optional margin to add to the bounding box.
+
+    Returns:
+    List[Tuple]: A list of tuples representing the bounding box of the object.
+    Each tuple contains the minimum and maximum indices for a dimension of the image.
+    """
     # get the size of the image
     dims = bwImg.shape
     # initialize a list of tuples for storing idxMin and idxMax values

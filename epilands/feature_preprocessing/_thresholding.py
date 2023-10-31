@@ -2,9 +2,11 @@
 from __future__ import annotations
 import pandas as pd
 import numpy as np
+import logging
 
-# relative imports
-from ..math.conversions import pixel_area_to_diameter
+
+sub_package_name = os.path.split(os.path.dirname(os.path.abspath(__file__)))[1]
+logger = logging.getLogger(sub_package_name)
 
 
 def size_threshold_df(
@@ -13,7 +15,6 @@ def size_threshold_df(
     low_threshold: float = 0,
     threshold_col: str = "Ch1_MOR_Nucleus_area",
     threshold_metric: str = "median",
-    convert_area_to_diameter: bool = False,
     **kwargs,
 ) -> pd.Series:
     """
@@ -27,7 +28,6 @@ def size_threshold_df(
     units: str - the units of the threshold_col
     show_histogram: bool - whether or not to show a histogram of the threshold_col
     display_quantile: float - the quantile to use for displaying the threshold_col
-    convert_area_to_diameter: bool - whether or not to convert the threshold_col from pixel area to diameter
     """
     if not isinstance(high_threshold, (int, float)):
         raise ValueError(
@@ -51,8 +51,6 @@ def size_threshold_df(
         )
 
     data_series = df[threshold_col].astype(float)  # copy the input data and reset index
-    if convert_area_to_diameter == True:
-        data_series = data_series.map(pixel_area_to_diameter)
     if threshold_metric == "median":
         high_threshold = high_threshold * data_series.median()
         low_threshold = low_threshold * data_series.median()
@@ -64,11 +62,11 @@ def size_threshold_df(
         low_threshold = data_series.quantile(low_threshold)
     object_count = len(data_series)  # count the number of rows in the dataframe
     # display_range = (int(0), int(data_series.quantile(display_quantile)))
-    print(
+    logger.info(
         "Starting with", object_count, "objects"
     )  # print the number of rows in the dataframe
-    print("Before Thresholding:")
-    print(
+    logger.info("Before Thresholding:")
+    logger.info(
         data_series.describe(percentiles=[0.5, 0.75, 0.9, 0.95])
     )  # print the summary statistics of the threshold_col
     # if show_histogram == True: #if the user wants to see the size distribution graphs
@@ -84,8 +82,8 @@ def size_threshold_df(
     inlier_objects = (data_series < high_threshold) & (
         data_series > low_threshold
     )  # create a series of cells that are inside the boundaries
-    print("After Thresholding:")
-    print(
+    logger.info("After Thresholding:")
+    logger.info(
         data_series[inlier_objects].describe(percentiles=[0.5, 0.75, 0.9, 0.95])
     )  # print the summary statistics of the threshold_col
     # if show_histogram == True: #if the user wants to see the size distribution graphs
@@ -100,7 +98,7 @@ def size_threshold_df(
     #         )
     outlier_count = inlier_objects.to_list().count(False)
     # print the number of cells dropped and the percentage of cells dropped
-    print(
+    logger.info(
         "Found {} objects ({}%) outside of the size boundaries ({},{})".format(
             outlier_count,
             np.round(outlier_count / object_count * 100, 3),

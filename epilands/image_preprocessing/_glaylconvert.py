@@ -13,7 +13,17 @@ def glaylconvert(
     qHigh: Union[int, float],
 ) -> np.ndarray:
     """
-    glaylconvert: convert gray scale image to q-space
+    Convert a grayscale image to q-space.
+
+    Parameters:
+    img (np.ndarray): The grayscale image to be converted.
+    orgLow (Union[int, float]): The original low grayscale level.
+    orgHigh (Union[int, float]): The original high grayscale level.
+    qLow (Union[int, float]): The low q-space level.
+    qHigh (Union[int, float]): The high q-space level.
+
+    Returns:
+    np.ndarray: The converted q-space image.
     """
     # Quantization of the grayscale levels in the ROI
     img = np.where(img > orgHigh, orgHigh, img)

@@ -8,6 +8,17 @@ def extract_object(
     mask: np.ndarray,
     objectIdx: int,
 ) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Extracts a single object from an image and its corresponding mask.
+
+    Args:
+        img (np.ndarray): The input image.
+        mask (np.ndarray): The input mask.
+        objectIdx (int): The index of the object to extract.
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray]: A tuple containing the segmented object image and its corresponding binary label.
+    """
     # get the image with 0 pixel margin
     object_img, object_label = cellselecter_ND(
         img=img, label=mask, margin=1, cellIdx=objectIdx

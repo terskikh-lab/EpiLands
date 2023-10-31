@@ -16,14 +16,24 @@ def show_thresholded_mask(
     masks: np.ndarray,
     masks_in: np.ndarray,
     masks_out: np.ndarray,
-    output_directory: str,
-    save: bool,
 ) -> Tuple[Figure, Tuple[Axes, Axes, Axes]]:
+    """
+    Displays an image with three subplots: the original image with no thresholding,
+    the image with post-thresholding, and the thresholded objects.
+
+    Args:
+        image (np.ndarray): The original image.
+        masks (np.ndarray): The masks.
+        masks_in (np.ndarray): The masks after thresholding.
+        masks_out (np.ndarray): The thresholded objects.
+
+    Returns:
+        Tuple[Figure, Tuple[Axes, Axes, Axes]]: A tuple containing the figure and the axes.
+    """
     fig, axs = plt.subplots(
         nrows=1,
         ncols=3,
         figsize=(8, 6),
-        # dpi=DEFAULT_DPI
     )
     masked_img = render_label(masks, img=image, cmap=(150, 150, 0))
     axs[0].imshow(masked_img)
@@ -37,8 +47,4 @@ def show_thresholded_mask(
     axs[2].imshow(masked_img3)
     axs[2].axis("off")
     axs[2].title("Thresholded Objects")
-    if save == True:
-        save_matplotlib_figure(
-            fig, path=output_directory, filename="thresholded_objects_mask_overlay"
-        )
     return fig, axs

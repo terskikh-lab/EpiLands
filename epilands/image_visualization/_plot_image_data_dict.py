@@ -11,9 +11,6 @@ from ..image_preprocessing import glaylconvert
 
 def plot_image_data_dict(
     image_dict: dict,
-    name: Union[str, int],
-    output_directory: str,
-    save: bool,
     cmap: str = "viridis",
 ) -> Tuple[Figure, Axes]:
     # display the image data
@@ -36,6 +33,4 @@ def plot_image_data_dict(
         )
         axs[i].set_axis_off()
         axs[i].set_title(f"{key}")
-    if save == True:
-        save_matplotlib_figure(fig, path=output_directory, filename=name)
     return fig, axs

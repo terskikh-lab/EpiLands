@@ -12,23 +12,28 @@ from ..generic_read_write import save_matplotlib_figure
 def plot_segmentation_mask(
     image: np.array,
     masks: np.array,
-    output_directory: str,
-    name: str = "segmented_image",
-    save: bool = True,
 ) -> Tuple[Figure, Tuple[Axes, Axes]]:
-    fig, (ax1, ax2) = plt.subplots(
+    """
+    Plots the segmentation mask of an input image.
+
+    Args:
+        image (np.array): The input image to be segmented.
+        masks (np.array): The segmentation mask of the input image.
+
+    Returns:
+        Tuple[Figure, Tuple[Axes, Axes]]: A tuple containing the matplotlib figure and the axes of the plotted images.
+    """
+    fig, axs = plt.subplots(
         1,
         2,
         figsize=(4, 8),
         # dpi=DEFAULT_DPI
     )
-    ax1.imshow(image, cmap="gray")
-    ax1.set_axis_off()
-    ax1.set_title("input image")
+    axs[0].imshow(image, cmap="gray")
+    axs[0].set_axis_off()
+    axs[0].set_title("input image")
     masked_img = render_label(masks, img=image)
-    ax2.imshow(masked_img, cmap="gray")
-    ax2.set_axis_off()
-    ax2.set_title("Segmentation + input overlay")
-    if save == True:
-        save_matplotlib_figure(fig, path=output_directory, filename=name)
+    axs[1].imshow(masked_img, cmap="gray")
+    axs[1].set_axis_off()
+    axs[1].set_title("Segmentation + input overlay")
     return fig, (ax1, ax2)
