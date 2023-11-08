@@ -8,7 +8,7 @@ import numpy as np
 from stardist.plot import render_label
 from typing import Tuple
 
-from ..generic_read_write import save_matplotlib_figure
+from ..read_write import save_matplotlib_figure
 
 
 def show_thresholded_mask(

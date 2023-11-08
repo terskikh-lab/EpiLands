@@ -1,9 +1,12 @@
 import logging
 import numpy as np
+import os
 
 # RELATIVE IMPORTS #
-from ._check_if_str import check_if_str
 from ..config import COLUMN_SEPARATOR
+
+sub_package_name = os.path.split(os.path.dirname(os.path.abspath(__file__)))[1]
+logger = logging.getLogger(sub_package_name)
 
 
 def join_iterable(t):
@@ -11,10 +14,10 @@ def join_iterable(t):
         if len(t) == 1:
             return str(t[0])
         elif len(t) > 1:
-            t = [check_if_str(i) for i in t if i != None]
+            t = [str(i) for i in t if i != None]
             return COLUMN_SEPARATOR.join(t)
         else:
-            logging.error("{} was empty: {}".format(type(t), t))
+            logger.error("{} was empty: {}".format(type(t), t))
     if isinstance(t, (str, type(None))):
         return t
     if isinstance(t, (float, int)):

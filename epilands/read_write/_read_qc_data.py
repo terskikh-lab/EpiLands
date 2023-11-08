@@ -1,5 +1,5 @@
 import pandas as pd
-from ..generic_read_write import find_all_files
+from ._find_all_files import find_all_files
 
 
 def read_qc_data(qc_output_directory: str) -> pd.DataFrame:

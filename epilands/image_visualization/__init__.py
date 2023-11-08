@@ -6,4 +6,3 @@ from ._plot_image_data_dict import plot_image_data_dict
 from ._plot_qc_heatmaps import plot_qc_heatmaps
 from ._plot_segmentation_mask import plot_segmentation_mask
 from ._show_thresholded_mask import show_thresholded_mask
-from ._threshold_objects_histogram import threshold_objects_histogram

@@ -6,7 +6,7 @@ import pandas as pd
 from typing import List
 
 # relative imports
-from ..generic_read_write import save_matplotlib_figure, save_dataframe_to_csv
+from ..read_write import save_matplotlib_figure, save_dataframe_to_csv
 from ..tools import join_iterable
 from ._plotting_utils import make_space_above
 

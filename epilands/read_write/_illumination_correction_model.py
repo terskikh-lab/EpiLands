@@ -1,6 +1,6 @@
 from basicpy import BaSiC
-from ..generic_read_write import ezsave
-from ..generic_read_write import ezload
+from ._ezsave import ezsave
+from ._ezload import ezload
 
 
 def save_illumination_correction_model(correction_model: BaSiC, file: str) -> None:

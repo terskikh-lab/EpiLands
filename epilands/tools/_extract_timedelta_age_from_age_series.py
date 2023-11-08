@@ -9,15 +9,15 @@ def extract_timedelta_age_from_age_series(age_series: pd.Series) -> pd.Series:
     print("Began Generating Ages for inputs: {}".format(age_series.unique()))
     birth_death_pattern = re.compile("B\d\d-\d\d-\d\d\d\d_D\d\d-\d\d-\d\d\d\d")
     age_series = age_series.astype(str, copy=True)
-    check__birthdeath_format = age_series.str.contains(birth_death_pattern, regex=True)
+    check_birthdeath_format = age_series.str.contains(birth_death_pattern, regex=True)
 
-    if True in check__birthdeath_format.values:
+    if True in check_birthdeath_format.values:
         print("Generating Birth-death ages to ### days...")
         # get the birth-death formatted ages
         # set index to be the original birth-deaths
         birth_death = pd.Series(
-            age_series[check__birthdeath_format.values].unique(),
-            index=age_series[check__birthdeath_format.values].unique(),
+            age_series[check_birthdeath_format.values].unique(),
+            index=age_series[check_birthdeath_format.values].unique(),
         )
 
         # generate lambda functions to 1) select only the birth-death and nothing else, then 2) take that and turn it into a timedelta
@@ -36,7 +36,7 @@ def extract_timedelta_age_from_age_series(age_series: pd.Series) -> pd.Series:
             print(i, "has been converted to", str(birth_death[i].days) + " days")
 
     # if some are not birth-death formatted
-    if False in check__birthdeath_format.values:
+    if False in check_birthdeath_format.values:
         print(
             "NOTICE: not all entries are in the format B\d\d-\d\d-\d\d\d\d_D\d\d-\d\d-\d\d\d\d"
         )
@@ -51,10 +51,10 @@ def extract_timedelta_age_from_age_series(age_series: pd.Series) -> pd.Series:
             )
             for i, j in zip(days.unique(), age_series.loc[check_days_format].unique()):
                 print(i, "has been converted to", j)
-        if False in (check_days_format + check__birthdeath_format).values:
+        if False in (check_days_format + check_birthdeath_format).values:
             print(
                 age_series[
-                    [not i for i in check_days_format + check__birthdeath_format]
+                    [not i for i in check_days_format + check_birthdeath_format]
                 ].unique(),
                 "are not in the birth-death or days age format. These will be returned as is",
             )

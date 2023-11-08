@@ -3,7 +3,7 @@ from __future__ import annotations
 # Import libraries
 import pandas as pd
 import numpy as np
-from ..tools import join_iterable
+from .tools import join_iterable
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_curve, roc_auc_score, accuracy_score, confusion_matrix
 

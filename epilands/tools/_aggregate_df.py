@@ -1,7 +1,6 @@
 import pandas as pd
 from typing import Union, Callable
 import numpy as np
-from ._join_columns import join_columns
 from ..config import COLUMN_SEPARATOR, NAME_SEPARATOR_
 
 

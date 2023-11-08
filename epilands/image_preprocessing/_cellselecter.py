@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Tuple
 from ._get_object_bbox import get_object_bbox
 
 

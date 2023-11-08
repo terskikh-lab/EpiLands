@@ -6,7 +6,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from typing import Tuple
 
-from ..generic_read_write import save_matplotlib_figure
+from ..read_write import save_matplotlib_figure
 
 
 def plot_heatmap(

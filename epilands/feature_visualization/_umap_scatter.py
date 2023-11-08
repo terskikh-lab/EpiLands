@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import umap.plot
 
 # RELATIVE IMPORTS #
-from ..generic_read_write import save_matplotlib_figure
+from ..read_write import save_matplotlib_figure
 
 
 def plot_umap_scatter(

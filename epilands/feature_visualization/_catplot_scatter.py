@@ -5,7 +5,7 @@ import pandas as pd
 import seaborn as sns
 
 # relative imports
-from ..generic_read_write import save_matplotlib_figure
+from ..read_write import save_matplotlib_figure
 from ..tools import join_iterable
 
 

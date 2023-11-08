@@ -6,8 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # RELATIVE IMPORTS #
-from ..generic_read_write import save_matplotlib_figure
-from ..tools import get_kwargs
+from ..read_write import save_matplotlib_figure
 
 
 def plot_scatterplot(
@@ -27,9 +26,14 @@ def plot_scatterplot(
     square_axes: bool = False,
     **kwargs
 ):
-    save_matplotlib_figure_kwargs = get_kwargs(
-        items=save_matplotlib_figure.__code__.co_varnames, **kwargs
-    )
+    save_matplotlib_figure_kwargs = {
+        i: kwargs[i]
+        for i in kwargs
+        if i
+        in save_matplotlib_figure.__code__.co_varnames[
+            save_matplotlib_figure.__code__.co_argcount
+        ]
+    }
     scatterplot_kwargs = {
         i: kwargs[i] for i in kwargs if i not in save_matplotlib_figure_kwargs
     }

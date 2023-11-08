@@ -8,7 +8,7 @@ from typing import Tuple
 import logging
 import os
 
-from ..generic_read_write import save_matplotlib_figure
+from ..read_write import save_matplotlib_figure
 from ..tools import reshape_dataframe_to_plate
 from ._plot_heatmap import plot_heatmap
 from multiprocesstools import MultiProcessHelper

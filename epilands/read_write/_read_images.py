@@ -23,16 +23,3 @@ def read_images(
     if len(image_files) > 1 and return_3d == False:
         tmpImg = tmpImg.max(axis=0)
     return tmpImg
-
-
-def load_images(
-    file_information: pd.DataFrame,
-) -> Dict[str, np.ndarray]:
-    with ThreadPoolExecutor() as executor:
-        image_data = {
-            channel: executor.submit(read_images, data["file_path"])
-            for channel, data in file_information.groupby(["channel"])
-        }
-    for image in image_data:
-        image_data[image] = image_data[image].result()
-    return image_data
