@@ -21,4 +21,5 @@ from ._save_dataframe_to_h5_file import (
     save_mixed_dataframe_to_h5_file,
 )
 from ._save_matplotlib_figure import save_matplotlib_figure
+from ._read_segmentation_data import read_segmentation_data
 from ._save_segmentation_data import save_segmentation_data

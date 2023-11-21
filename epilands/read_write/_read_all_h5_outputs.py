@@ -2,7 +2,7 @@ from __future__ import annotations
 import pandas as pd
 from tqdm import tqdm
 
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
 
 # RELATIVE IMPORTS #
@@ -60,17 +60,14 @@ def read_all_h5_outputs(
     # start = time.perf_counter()
     # data = []
     # with ThreadPoolExecutor() as executor:
-    #     futures = executor.map(read_dataframe_from_h5_file, files)
-    #     for filedata in tqdm(futures):
-    #         if filedata.shape[0] == 0:
-    #             continue
-    #         else:
-    #             data.append(filedata)
+    #     futures = [executor.submit(read_dataframe_from_h5_file, f) for f in files]
+    #     for filedata in tqdm(as_completed(futures)):
+    #         data.append(filedata.result())
     #     executor.shutdown(wait=True)
     # stop = time.perf_counter()
     # print(stop - start)
 
-    # start = time.perf_counter()
+    start = time.perf_counter()
     data = []
     for file in tqdm(files):
         filedata = read_dataframe_from_h5_file(file)
@@ -78,7 +75,7 @@ def read_all_h5_outputs(
             continue
         else:
             data.append(filedata)
-    # stop = time.perf_counter()
-    # print(stop - start)
+    stop = time.perf_counter()
+    print(stop - start)
     data = pd.concat(data, ignore_index=True)
     return data
