@@ -5,9 +5,31 @@ from skimage.measure import moments
 from typing import Dict
 
 
+from scipy.spatial import distance
+from skimage.measure import regionprops
+import numpy as np
+
+
 def object_pixel_count(image_data: Dict[str, np.ndarray]) -> pd.Series:
     object_features = {f"MOR_object_pixel_count": np.count_nonzero(image_data["masks"])}
     return pd.Series(object_features)
+
+
+def perimeter(mask):
+    """
+    Calculate the perimeter of a 2D object represented by a binary mask.
+
+    Parameters:
+    mask (numpy.ndarray): A binary mask of the object.
+
+    Returns:
+    float: The perimeter of the object.
+    """
+    # Calculate the perimeter of the mask
+    perimeter = np.sum(mask[:, 1:] != mask[:, :-1]) + np.sum(
+        mask[1:, :] != mask[:-1, :]
+    )
+    return perimeter
 
 
 def roundness(mask):
@@ -26,15 +48,13 @@ def roundness(mask):
     """
 
     # Calculate the perimeter of the mask
-    perimeter = np.sum(mask[:, 1:] != mask[:, :-1]) + np.sum(
-        mask[1:, :] != mask[:-1, :]
-    )
+    perim = perimeter(mask)
 
     # Calculate the area of the mask
     area = np.sum(mask)
 
     # Calculate the roundness of the mask
-    roundness = (4 * np.pi * area) / (perimeter**2)
+    roundness = (4 * np.pi * area) / (perim**2)
 
     return roundness
 
@@ -71,3 +91,79 @@ def eccentricity(mask):
     )
 
     return eccentricity
+
+
+def sphericity(mask):
+    """
+    Calculate the sphericity of a 2D object represented by a binary mask.
+
+    Parameters:
+    mask (numpy.ndarray): A binary mask of the object.
+
+    Returns:
+    float: The sphericity of the object.
+    """
+    area = np.sum(mask)
+    perim = perimeter(mask)
+    sphericity = (np.pi ** (1 / 3) * (6 * area) ** (2 / 3)) / perim
+    return sphericity
+
+
+def spherical_disproportion(mask):
+    """
+    Calculate the spherical disproportion of a 2D object represented by a binary mask.
+
+    Parameters:
+    mask (numpy.ndarray): A binary mask of the object.
+
+    Returns:
+    float: The spherical disproportion of the object.
+    """
+    return 1 / sphericity(mask)
+
+
+def max_2d_diameter(mask):
+    """
+    Calculate the maximum 2D diameter of a 2D object represented by a binary mask.
+
+    Parameters:
+    mask (numpy.ndarray): A binary mask of the object.
+
+    Returns:
+    float: The maximum 2D diameter of the object.
+    """
+    points = np.argwhere(mask)  # get the coordinates of all non-zero points
+    distances = distance.pdist(points, "euclidean")  # calculate all pairwise distances
+    max_diameter = np.max(distances)
+    return max_diameter
+
+
+def major_minor_axis_length(mask):
+    """
+    Calculate the major and minor axis lengths of a 2D object represented by a binary mask.
+
+    Parameters:
+    mask (numpy.ndarray): A binary mask of the object.
+
+    Returns:
+    tuple: The major and minor axis lengths of the object.
+    """
+    props = regionprops(mask.astype(int))[0]  # calculate properties of the mask
+    major_axis_length = props.major_axis_length
+    minor_axis_length = props.minor_axis_length
+    return major_axis_length, minor_axis_length
+
+
+def elongation(mask):
+    """
+    Calculate the elongation of a 2D object represented by a binary mask.
+
+    Parameters:
+    mask (numpy.ndarray): A binary mask of the object.
+
+    Returns:
+    float: The elongation of the object.
+    """
+    major_axis_length, minor_axis_length = major_minor_axis_length(mask)
+    elongation = major_axis_length / minor_axis_length
+    return elongation
