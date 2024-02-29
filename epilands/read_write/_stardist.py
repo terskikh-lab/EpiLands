@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import h5py
-from typing import Union
+from typing import Union, Tuple
 
 from ..image_preprocessing import object_cookie_cutter
 
@@ -84,44 +84,27 @@ def save_segmentation_data(
                 objects_idx_group.create_dataset(ch, data=data[ch][object_idx])
 
 
-# def save_segmentation_data(
-#     path: str,
-#     filename: str,
-#     image_data: dict,
-#     masks: np.ndarray,
-#     details: dict,
-#     objects: Union[list, np.ndarray],
-# ):
-#     # Create the file, open it and write the data to it
-#     with h5py.File(os.path.join(path, filename), "x") as hdf5_file:
-#         # Create group for details
-#         details_group = hdf5_file.create_group("details")
-#         # Full mask group
-#         fullmask_group = hdf5_file.create_group("fullmask")
-#         fullmask_group.create_dataset("masks", data=masks, dtype=masks.dtype)
-#         # Create group for image data
-#         image_data_group = hdf5_file.create_group("image_data")
-#         # Loop the details and save each to the details group
-#         for detail in details.keys():
-#             details_group.create_dataset(name=detail, data=details[detail])
-#         channels = list(image_data.keys())
-#         channel_group = image_data_group.create_group(name=channels[0])
-#         masks_group = image_data_group.create_group(name="masks")
-#         object_slices, object_masks = object_cookie_cutter(
-#             image=image_data[channels[0]],
-#             mask=masks,
-#             objects=objects,
-#         )
-#         for object_idx, object_slice in object_slices.items():
-#             channel_group.create_dataset(str(object_idx), data=object_slice)
-#             masks_group.create_dataset(str(object_idx), data=object_masks[object_idx])
-#         # loop through each channel, save each to the image data group
-#         for channel in channels[1:]:
-#             channel_group = image_data_group.create_group(name=channel)
-#             object_slices, object_masks = object_cookie_cutter(
-#                 image=image_data[channel],
-#                 mask=masks,
-#                 objects=objects,
-#             )
-#             for object_idx, object_slice in object_slices.items():
-#                 channel_group.create_dataset(str(object_idx), data=object_slice)
+def read_segmentation_data(
+    segmentationFile,
+) -> Tuple[dict, dict, list]:
+    with h5py.File(segmentationFile, "r") as segmentationFile:
+        details = {}
+        for detail in segmentationFile["details"].keys():
+            details[detail] = np.array(segmentationFile["details"][detail][:])
+        # read in the image data
+        objects = {
+            objIdx: {ch: img[:] for ch, img in objSubGrp.items()}
+            for objIdx, objSubGrp in segmentationFile["objects"].items()
+        }
+    return objects, details
+
+
+def read_stardist_data(segmentationFile) -> Tuple[dict, dict, list]:
+    with h5py.File(segmentationFile, "r") as segmentationFile:
+        details = {}
+        for detail in segmentationFile["details"].keys():
+            details[detail] = np.array(segmentationFile["details"][detail][:])
+        # Construct objects linspace since size thresholding has not been done yet
+        objects = [*map(int, segmentationFile["image_data"]["masks"].keys())]
+        masks = np.array(segmentationFile["fullmask"]["masks"][:])
+    return masks, details, objects

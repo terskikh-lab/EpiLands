@@ -3,7 +3,7 @@ from ._extract_imagelike_file_information import extract_imagelike_file_informat
 from ._ezload import ezload
 from ._ezsave import ezsave
 from ._find_all_files import find_all_files
-from ._illumination_correction_model import (
+from ._illumination_correction import (
     load_illumination_correction_model,
     save_illumination_correction_model,
 )
@@ -20,6 +20,5 @@ from ._save_dataframe_to_h5_file import (
     save_dataframe_to_h5_file,
     save_mixed_dataframe_to_h5_file,
 )
-from ._save_matplotlib_figure import save_matplotlib_figure
-from ._read_segmentation_data import read_segmentation_data
-from ._save_segmentation_data import save_segmentation_data
+from ._visualization import save_matplotlib_figure
+from ._stardist import save_segmentation_data, read_segmentation_data
