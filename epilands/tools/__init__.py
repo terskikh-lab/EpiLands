@@ -9,4 +9,3 @@ from ._join_iterable import join_iterable
 from ._reshape_dataframe_to_plate import reshape_dataframe_to_plate
 from ._split_df_by_dtype import split_df_by_dtype
 from ._update_platemap import update_platemap
-from ._gpuinit import gpuinit
