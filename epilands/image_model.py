@@ -12,7 +12,19 @@ from sklearn.metrics import roc_curve, roc_auc_score, accuracy_score, confusion_
 
 class ImAgeModel:
     def __init__(self) -> None:
-        pass
+        self.A_centroid: pd.Series = None
+        self.B_centroid: pd.Series = None
+        self.ImAgeVec: pd.Series = None
+        self.l2_norm: float = None
+        self.coef_: pd.Series = None
+        self.feature_names_in_: list = None
+        self.n_features_in_: int = None
+        self.classes_: list = None
+        self.scores: pd.Series = None
+        self.auc: float = None
+        self.threshold: float = None
+        self.accuracy_score: float = None
+        self.confusion_matrix: pd.Series = None
 
     def fit(
         self,
